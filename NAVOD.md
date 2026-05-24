@@ -1,83 +1,94 @@
-# RideConnectUk — co udělat vy (3 kroky)
+# RideConnectUk — nasazení LIVE (dovertaxi.co.uk)
 
-Projekt je připravený na vašem Macu (`npm install` a build proběhly).
+## Krok 1 — nahrát kód na GitHub (5 min)
 
----
+Kód je commitnutý lokálně. V **Cursoru**:
 
-## Krok A — GitHub (jednou, ~5 minut)
+1. Vlevo ikona **větve** (Source Control)
+2. Tlačítko **Publish Branch** nebo **Sync / Push**
+3. Přihlásit se GitHub → repo: **doverairport-web/rideconnect-uk**
 
-1. Otevřete https://github.com/new  
-2. Repository name: `rideconnect-uk`  
-3. **Private** nebo Public — jak chcete  
-4. **NEZAŠKRTÁVEJTE** „Add README“ (repo musí být prázdné)  
-5. Klikněte **Create repository**  
-6. Na stránce zkopírujte příkazy pod „push an existing repository“, nebo v Terminálu (nahraďte `VASE_GITHUB_JMENO`):
+Nebo v terminálu (po přihlášení GitHub):
 
 ```bash
 cd ~/Projects/dovertaxi
-git remote add origin https://github.com/VASE_GITHUB_JMENO/rideconnect-uk.git
 git push -u origin main
 ```
 
-GitHub se zeptá na přihlášení — použijte svůj účet.
+Ověření: https://github.com/doverairport-web/rideconnect-uk — musí tam být soubory `src/`, `public/images/`.
 
 ---
 
-## Krok B — Vercel (jednou, ~10 minut)
+## Krok 2 — Vercel (10 min)
 
-1. https://vercel.com → **Sign Up** / **Log in** → **Continue with GitHub**  
-2. **Add New… → Project** → vyberte `rideconnect-uk` → **Import**  
-3. Nechte výchozí nastavení → **Deploy** (počkejte ~2 minuty)  
-4. **Settings → Environment Variables** → přidejte:
+1. https://vercel.com → **Sign up / Log in** → **Continue with GitHub**
+2. **Add New → Project** → vyberte **rideconnect-uk** → **Import**
+3. **Deploy** (nechte výchozí nastavení Next.js)
+
+### Environment Variables (Settings → Environment Variables)
 
 | Name | Value |
 |------|--------|
-| `AIRTABLE_TOKEN` | token z airtable.com (viz níže) |
 | `NEXT_PUBLIC_SITE_URL` | `https://dovertaxi.co.uk` |
-| `NEXT_PUBLIC_PHONE` | vaše telefonní číslo |
-| `NEXT_PUBLIC_EMAIL` | váš e-mail |
+| `NEXT_PUBLIC_PHONES` | `01304350125,01304208208,01304350777` |
+| `NEXT_PUBLIC_EMAIL` | `doverairport@gmail.com` |
+| `NEXT_PUBLIC_WHATSAPP` | `07405327650` |
+| `AIRTABLE_TOKEN` | *(váš token — rezervace bez něj neuloží)* |
+| `AIRTABLE_BASE_ID` | `appp3gYwPeng1JnRG` |
+| `AIRTABLE_TABLE_NAME` | `Bookings` |
 
-5. **Deployments** → u posledního deploye **⋯ → Redeploy**
+4. **Deployments** → **Redeploy** (po přidání proměnných)
 
-Otestujte odkaz `https://rideconnect-uk.vercel.app` (název se může mírně lišit).
-
-### Airtable token
-
-1. https://airtable.com → váš base → **Help** → **API documentation**  
-2. Vytvořte **Personal access token** s právem zapisovat do tabulky Bookings.
+Test: otevřete `https://rideconnect-uk.vercel.app` (název se může mírně lišit).
 
 ---
 
-## Krok C — Doména v 123reg (~10 minut)
+## Krok 3 — doména dovertaxi.co.uk v 123reg
 
-### C1 — Zrušit staré přesměrování
+### A) Zrušit staré přesměrování
 
-123reg → **dovertaxi.co.uk** → **Forwarding** / **DNS**  
-→ smažte přesměrování na `doverorionandcarecars.co.uk`.
+123reg → **dovertaxi.co.uk** → **Domain forwarding**  
+→ smažte redirect na `doverorionandcarecars.co.uk`.
 
-### C2 — Přidat doménu ve Vercelu
+### B) Přidat doménu ve Vercelu
 
-Vercel → váš projekt → **Settings → Domains**  
-→ přidejte `dovertaxi.co.uk` a `www.dovertaxi.co.uk`.
+Vercel → projekt → **Settings → Domains** → přidat:
 
-### C3 — DNS v 123reg
+- `dovertaxi.co.uk`
+- `www.dovertaxi.co.uk`
 
-Vercel ukáže přesné záznamy. Obvykle:
+Vercel ukáže DNS záznamy. Typicky:
 
 | Host | Type | Value |
 |------|------|--------|
-| `www` | CNAME | `cname.vercel-dns.com` |
-| `@` | A | `76.76.21.21` |
+| `@` | **A** | `76.76.21.21` |
+| `www` | **CNAME** | `cname.vercel-dns.com` |
 
-Uložte. Za 15 min – 24 h bude fungovat **https://dovertaxi.co.uk**.
+*(Použijte přesné hodnoty z Vercelu.)*
+
+### C) Nastavit DNS v 123reg
+
+**Manage DNS / Advanced DNS** → přidat záznamy → uložit.
+
+Po 15 min – 24 h: **https://dovertaxi.co.uk** → RideConnectUk web. HTTPS automaticky.
 
 ---
 
-## Lokální náhled (kdykoli)
+## Krok 4 — kontrola
+
+- [ ] Web se načte na dovertaxi.co.uk
+- [ ] Telefony, e-mail, WhatsApp v patičce
+- [ ] Sekce Prices (Hackney ceník)
+- [ ] Test rezervace → řádek v Airtable *(potřebuje AIRTABLE_TOKEN)*
+
+---
+
+## Bez GitHubu (alternativa)
 
 ```bash
 cd ~/Projects/dovertaxi
-npm run dev
+npx vercel login
+npx vercel --prod
 ```
 
-→ http://localhost:3000
+Pak doménu připojit ve Vercel panelu stejně jako výše.
