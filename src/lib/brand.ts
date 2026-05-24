@@ -1,3 +1,5 @@
+import { email } from "@/lib/contact";
+
 /** Customer-facing brand name */
 export const BRAND_NAME = "RideConnectUk";
 export const BRAND_LEGAL = "RideConnect UK";
@@ -13,5 +15,4 @@ export function siteHost(): string {
   }
 }
 
-export const DEFAULT_EMAIL =
-  process.env.NEXT_PUBLIC_EMAIL ?? "bookings@rideconnectuk.co.uk";
+export const DEFAULT_EMAIL = email;

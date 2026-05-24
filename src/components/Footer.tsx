@@ -1,7 +1,7 @@
 import Image from "next/image";
-import { BRAND_NAME, DEFAULT_EMAIL, siteHost } from "@/lib/brand";
-
-const phone = process.env.NEXT_PUBLIC_PHONE || "";
+import { ContactLinks } from "@/components/ContactLinks";
+import { BRAND_NAME, siteHost } from "@/lib/brand";
+import { primaryPhone, telHref } from "@/lib/contact";
 
 export function Footer() {
   return (
@@ -24,20 +24,7 @@ export function Footer() {
         </div>
         <div>
           <p className="font-medium text-brand-green">Contact</p>
-          <ul className="mt-3 space-y-2 text-sm text-white/80">
-            {phone ? (
-              <li>
-                <a href={`tel:${phone.replace(/\s/g, "")}`} className="hover:text-brand-green">
-                  {phone}
-                </a>
-              </li>
-            ) : null}
-            <li>
-              <a href={`mailto:${DEFAULT_EMAIL}`} className="hover:text-brand-green">
-                {DEFAULT_EMAIL}
-              </a>
-            </li>
-          </ul>
+          <ContactLinks className="mt-3 text-sm text-white/80" />
         </div>
         <div>
           <p className="font-medium text-brand-green">Bookings</p>
@@ -46,6 +33,12 @@ export function Footer() {
             assigned after confirmation — we will not promise a specific driver
             until the job is accepted.
           </p>
+          <a
+            href={`tel:${telHref(primaryPhone)}`}
+            className="mt-4 inline-block text-sm font-medium text-brand-green hover:underline"
+          >
+            Call {primaryPhone}
+          </a>
         </div>
       </div>
       <div className="border-t border-white/10 py-4 text-center text-xs text-white/50">
