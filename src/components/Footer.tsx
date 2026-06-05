@@ -1,3 +1,4 @@
+import { AppStoreButtons } from "@/components/AppStoreButtons";
 import Image from "next/image";
 import { ContactLinks } from "@/components/ContactLinks";
 import { BRAND_NAME, siteHost } from "@/lib/brand";
@@ -21,6 +22,7 @@ export function Footer() {
             Reliable taxis and private hire in Dover, Kent — airport, cruise port,
             stations, and hospital transfers.
           </p>
+          <AppStoreButtons className="mt-6" title="Download the app" />
         </div>
         <div>
           <p className="font-medium text-brand-green">Contact</p>
@@ -43,6 +45,10 @@ export function Footer() {
       </div>
       <div className="border-t border-white/10 py-4 text-center text-xs text-white/50">
         © {new Date().getFullYear()} {BRAND_NAME} · {siteHost()}
+        <span className="mx-2">·</span>
+        <a href="/privacy" className="hover:text-white/80 hover:underline">
+          Privacy Policy
+        </a>
       </div>
     </footer>
   );
