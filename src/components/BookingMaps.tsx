@@ -26,12 +26,14 @@ export function AddressField({
   value,
   onChange,
   placeholder,
+  hint,
 }: {
   name: string;
   label: string;
   value: string;
   onChange: (value: string, coords?: { lat: number; lng: number } | null) => void;
   placeholder: string;
+  hint?: string;
 }) {
   return (
     <label className="block text-sm font-medium text-navy sm:col-span-2">
@@ -44,6 +46,9 @@ export function AddressField({
         placeholder={placeholder}
         className={inputClass}
       />
+      {hint ? (
+        <span className="mt-1 block text-xs font-normal text-muted">{hint}</span>
+      ) : null}
     </label>
   );
 }

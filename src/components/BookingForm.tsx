@@ -1,19 +1,39 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   AddressField,
   BookingMapsProvider,
   RouteMapPanel,
 } from "@/components/BookingMaps";
-import { BookingTripPanel } from "@/components/BookingTripPanel";
+import {
+  BookingFareSummary,
+  BookingTripAdvanced,
+  BookingTripPanel,
+} from "@/components/BookingTripPanel";
 import { BRAND_NAME } from "@/lib/brand";
 import { trackBeginCheckout, trackBookingLead } from "@/lib/analytics-client";
 import {
   trackKthBeginCheckout,
   trackKthBookingLead,
 } from "@/lib/kenttravelhub/analytics-client";
+import {
+  AIRPORT_QUICK_DESTINATIONS,
+  AIRPORT_QUICK_PICKUPS,
+  CRUISE_QUICK_PLACES,
+  defaultsForTripType,
+  TRIP_TYPE_OPTIONS,
+  tripTypeFromParam,
+  type TripType,
+} from "@/lib/booking-form-presets";
 import { requiresOnlineCardPayment } from "@/lib/booking-payment";
+import {
+  primaryPhone,
+  telHref,
+  whatsappDisplay,
+  whatsappHref,
+} from "@/lib/contact";
 import { formatMeterFare } from "@/lib/meter";
 import type { PaymentMethod } from "@/lib/booking-options";
 import type { RouteMapData } from "@/lib/route-estimate";
@@ -33,6 +53,12 @@ type FarePreview = {
 
 const inputClass =
   "mt-1 w-full rounded-lg border border-navy/15 bg-white px-3 py-2.5 text-navy shadow-sm outline-none ring-gold/30 placeholder:text-muted/60 focus:border-gold focus:ring-2";
+
+const chipClass =
+  "rounded-full border border-navy/15 bg-white px-3 py-1.5 text-xs font-semibold text-navy transition hover:border-brand-green hover:text-brand-green";
+
+const chipActiveClass =
+  "rounded-full border border-brand-green bg-brand-green/10 px-3 py-1.5 text-xs font-semibold text-brand-green-dark";
 
 function isKthSite(): boolean {
   return typeof document !== "undefined" && document.body.dataset.kthSite === "true";
@@ -68,7 +94,14 @@ function bookingSourceFromUrl(): string | undefined {
   return params.get("utm_source") ?? params.get("utm_campaign") ?? undefined;
 }
 
+function tomorrowIsoDate(): string {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  return d.toISOString().slice(0, 10);
+}
+
 function BookingFormInner() {
+  const searchParams = useSearchParams();
   const [state, setState] = useState<FormState>("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [needsReview, setNeedsReview] = useState(false);
@@ -76,18 +109,21 @@ function BookingFormInner() {
   const [farePreview, setFarePreview] = useState<FarePreview | null>(null);
   const [fareLoading, setFareLoading] = useState(false);
   const [fareError, setFareError] = useState("");
+  const [tripType, setTripType] = useState<TripType>("airport");
+  const [transferDetail, setTransferDetail] = useState("");
   const [pickup, setPickup] = useState("");
   const [destination, setDestination] = useState("");
   const [pickupCoord, setPickupCoord] = useState<{ lat: number; lng: number } | null>(null);
   const [destinationCoord, setDestinationCoord] = useState<{ lat: number; lng: number } | null>(
     null,
   );
-  const [passengers, setPassengers] = useState(1);
+  const [passengers, setPassengers] = useState(2);
   const [luggageSmall, setLuggageSmall] = useState(0);
-  const [luggageLarge, setLuggageLarge] = useState(0);
+  const [luggageLarge, setLuggageLarge] = useState(2);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
   const [returnTrip, setReturnTrip] = useState(false);
   const [returnMode, setReturnMode] = useState<"same" | "reverse" | null>(null);
+  const [urlPrefillDone, setUrlPrefillDone] = useState(false);
   const [formSnapshot, setFormSnapshot] = useState({
     pickup: "",
     destination: "",
@@ -95,10 +131,34 @@ function BookingFormInner() {
     destination_coord: null as { lat: number; lng: number } | null,
     pickup_date: "",
     pickup_time: "",
-    passengers: "1",
-    luggageArticles: 0,
+    passengers: "2",
+    luggageArticles: 2,
     returnTrip: false,
   });
+
+  const tripDefaults = defaultsForTripType(tripType);
+
+  useEffect(() => {
+    if (urlPrefillDone) return;
+
+    const typeParam = tripTypeFromParam(searchParams.get("type"));
+    if (typeParam) setTripType(typeParam);
+
+    const pickupParam = searchParams.get("pickup")?.trim();
+    const destinationParam = searchParams.get("destination")?.trim();
+    if (pickupParam) setPickup(pickupParam);
+    if (destinationParam) setDestination(destinationParam);
+
+    setUrlPrefillDone(true);
+  }, [searchParams, urlPrefillDone]);
+
+  function applyTripType(type: TripType) {
+    setTripType(type);
+    const defaults = defaultsForTripType(type);
+    setPassengers(defaults.passengers);
+    setLuggageLarge(defaults.luggageLarge);
+    setLuggageSmall(0);
+  }
 
   useEffect(() => {
     setFormSnapshot((prev) => ({
@@ -162,7 +222,9 @@ function BookingFormInner() {
         const result = await response.json();
         if (!response.ok || !result.ok) {
           setFarePreview(null);
-          setFareError(result.error || "Could not calculate fare — pick an address from the list.");
+          setFareError(
+            "Approximate fare unavailable — you can still request your booking and we'll confirm the price by phone.",
+          );
           return;
         }
 
@@ -214,7 +276,9 @@ function BookingFormInner() {
         setFareError("");
       } catch {
         setFarePreview(null);
-        setFareError("Could not calculate fare — pick an address from the list.");
+        setFareError(
+          "Approximate fare unavailable — you can still request your booking and we'll confirm the price by phone.",
+        );
       } finally {
         setFareLoading(false);
       }
@@ -243,23 +307,43 @@ function BookingFormInner() {
     }));
   }
 
+  function setQuickPickup(address: string) {
+    setPickup(address);
+    setPickupCoord(null);
+  }
+
+  function setQuickDestination(address: string) {
+    setDestination(address);
+    setDestinationCoord(null);
+  }
+
   function handleReturnSame() {
     setReturnTrip(true);
     setReturnMode("same");
   }
 
   function handleReturnReverse() {
-    const nextPickup = destination;
-    const nextDestination = pickup;
-    const nextPickupCoord = destinationCoord;
-    const nextDestinationCoord = pickupCoord;
-
-    setPickup(nextPickup);
-    setDestination(nextDestination);
-    setPickupCoord(nextPickupCoord);
-    setDestinationCoord(nextDestinationCoord);
+    setPickup(destination);
+    setDestination(pickup);
+    setPickupCoord(destinationCoord);
+    setDestinationCoord(pickupCoord);
     setReturnTrip(true);
     setReturnMode("reverse");
+  }
+
+  function buildNotes(userNotes: string): string {
+    const parts: string[] = [];
+    if (transferDetail.trim()) {
+      const prefix =
+        tripType === "airport"
+          ? "Flight"
+          : tripType === "cruise"
+            ? "Ship"
+            : "Ref";
+      parts.push(`${prefix}: ${transferDetail.trim()}`);
+    }
+    if (userNotes.trim()) parts.push(userNotes.trim());
+    return parts.join("\n");
   }
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -272,21 +356,23 @@ function BookingFormInner() {
 
     if (data.get("gdpr") !== "on") {
       setState("error");
-      setErrorMessage("Please confirm you agree to us using your details for this booking.");
+      setErrorMessage("Please confirm we may contact you about this journey.");
       return;
     }
 
     const email = String(data.get("email") ?? "").trim();
     if (requiresOnlineCardPayment(paymentMethod) && !email) {
       setState("error");
-      setErrorMessage("Email is required for card payment (booking confirmation).");
+      setErrorMessage(
+        `Email is required for card payment — add one above, choose Cash, or call ${primaryPhone}.`,
+      );
       return;
     }
 
     if (requiresOnlineCardPayment(paymentMethod) && !farePreview?.fareAmount) {
       setState("error");
       setErrorMessage(
-        "Pick pickup and destination from the address list so we can calculate the fare before card payment.",
+        `Pick addresses from the suggestions for card payment, switch to Cash, or call ${primaryPhone}.`,
       );
       return;
     }
@@ -305,7 +391,7 @@ function BookingFormInner() {
       payment_method: paymentMethod,
       return_trip: returnTrip,
       return_mode: returnTrip ? returnMode ?? "same" : undefined,
-      notes: String(data.get("notes") ?? ""),
+      notes: buildNotes(String(data.get("notes") ?? "")),
       estimated_fare: farePreview?.fareAmount ?? undefined,
     };
 
@@ -345,9 +431,10 @@ function BookingFormInner() {
       setDestination("");
       setPickupCoord(null);
       setDestinationCoord(null);
-      setPassengers(1);
+      setTransferDetail("");
+      setPassengers(2);
       setLuggageSmall(0);
-      setLuggageLarge(0);
+      setLuggageLarge(2);
       setPaymentMethod("cash");
       setReturnTrip(false);
       setReturnMode(null);
@@ -356,8 +443,10 @@ function BookingFormInner() {
       form.reset();
     } catch (error) {
       setState("error");
+      const msg =
+        error instanceof Error ? error.message : "Could not send your booking.";
       setErrorMessage(
-        error instanceof Error ? error.message : "Could not send your booking.",
+        `${msg} Call ${primaryPhone} or WhatsApp ${whatsappDisplay} and we'll book you in minutes.`,
       );
     }
   }
@@ -368,32 +457,82 @@ function BookingFormInner() {
       : "Return same route back"
     : null;
 
+  const submitLabel = (() => {
+    if (state === "submitting") {
+      return requiresOnlineCardPayment(paymentMethod)
+        ? "Redirecting to secure payment…"
+        : "Booking your transfer…";
+    }
+    if (requiresOnlineCardPayment(paymentMethod)) {
+      return farePreview?.fareFormatted
+        ? `Pay ${farePreview.fareFormatted} by card`
+        : "Pay by card";
+    }
+    if (farePreview?.fareFormatted) {
+      return tripType === "airport"
+        ? `Request transfer — approx ${farePreview.fareFormatted}`
+        : tripType === "cruise"
+          ? `Request cruise pickup — approx ${farePreview.fareFormatted}`
+          : `Request booking — approx ${farePreview.fareFormatted}`;
+    }
+    return tripType === "airport"
+      ? "Request airport transfer"
+      : tripType === "cruise"
+        ? "Request cruise pickup"
+        : "Request booking";
+  })();
+
   if (state === "success") {
     return (
       <div className="rounded-2xl border border-green-200 bg-green-50 p-8 text-center">
-        <p className="text-xl font-semibold text-navy">Booking received</p>
+        <p className="text-xl font-semibold text-navy">Booking request received</p>
         <p className="mt-3 text-muted">
-          Thank you. Your request has been sent to our dispatch team.
+          Thank you — your journey details are with our dispatch team.
           {confirmationEmailSent
-            ? " A confirmation email has been sent to you."
+            ? " A confirmation email has been sent."
             : needsReview
-              ? " A dispatcher will confirm the details shortly."
-              : " We will confirm your pickup time as soon as possible."}
+              ? " We'll confirm any route details shortly."
+              : " We'll call or text to confirm your pickup time."}
         </p>
-        <p className="mt-2 text-sm text-muted">
-          A driver is assigned only after dispatch accepts the job — not at the
-          moment you submit this form.
+        <p className="mt-2 text-sm font-medium text-navy">
+          We usually respond within 15 minutes. Save {primaryPhone} in case we need your flight or
+          ship details.
         </p>
-        <button
-          type="button"
-          onClick={() => setState("idle")}
-          className="mt-6 rounded-full bg-navy px-6 py-2.5 text-sm font-medium text-white hover:bg-navy-light"
-        >
-          Book another journey
-        </button>
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
+          <a
+            href={`tel:${telHref(primaryPhone)}`}
+            className="rounded-full bg-brand-green px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-green-dark"
+          >
+            Call {primaryPhone}
+          </a>
+          <a
+            href={whatsappHref("Hi, I just submitted a taxi booking online.")}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-full border border-navy/20 bg-white px-5 py-2.5 text-sm font-semibold text-navy hover:border-brand-green"
+          >
+            WhatsApp
+          </a>
+          <button
+            type="button"
+            onClick={() => setState("idle")}
+            className="rounded-full border border-navy/15 px-5 py-2.5 text-sm font-medium text-navy hover:bg-white"
+          >
+            Book another journey
+          </button>
+        </div>
       </div>
     );
   }
+
+  const quickDestinations =
+    tripType === "airport"
+      ? AIRPORT_QUICK_DESTINATIONS
+      : tripType === "cruise"
+        ? CRUISE_QUICK_PLACES
+        : [];
+
+  const quickPickups = tripType === "airport" ? AIRPORT_QUICK_PICKUPS : [];
 
   return (
     <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
@@ -402,42 +541,66 @@ function BookingFormInner() {
         onChange={(event) => syncFormSnapshot(event.currentTarget)}
         className="space-y-5"
       >
-        <div className="grid gap-5 sm:grid-cols-2">
-          <label className="block text-sm font-medium text-navy">
-            Full name
-            <input
-              name="customer_name"
-              required
-              autoComplete="name"
-              className={inputClass}
-              placeholder="John Smith"
-            />
-          </label>
-          <label className="block text-sm font-medium text-navy">
-            Mobile number
-            <input
-              name="phone"
-              type="tel"
-              required
-              autoComplete="tel"
-              className={inputClass}
-              placeholder="07..."
-            />
-          </label>
-          <label className="block text-sm font-medium text-navy sm:col-span-2">
-            Email (for booking confirmation)
-            <input
-              name="email"
-              type="email"
-              autoComplete="email"
-              className={inputClass}
-              placeholder="you@example.com"
-            />
-            <span className="mt-1 block text-xs font-normal text-muted">
-              We send a confirmation copy to this address when email is provided.
-            </span>
-          </label>
+        <fieldset className="space-y-3">
+          <legend className="text-sm font-semibold text-navy">Transfer type</legend>
+          <div className="flex flex-wrap gap-2">
+            {TRIP_TYPE_OPTIONS.map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                onClick={() => applyTripType(option.id)}
+                className={tripType === option.id ? chipActiveClass : chipClass}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-muted">{tripDefaults.transferHint}</p>
+        </fieldset>
 
+        {quickPickups.length > 0 ? (
+          <div className="space-y-2">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted">Quick pickup</p>
+            <div className="flex flex-wrap gap-2">
+              {quickPickups.map((place) => (
+                <button
+                  key={place.label}
+                  type="button"
+                  onClick={() => setQuickPickup(place.address)}
+                  className={chipClass}
+                >
+                  {place.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
+        {quickDestinations.length > 0 ? (
+          <div className="space-y-2">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted">
+              {tripType === "cruise" ? "Quick location" : "Quick destination"}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {quickDestinations.map((place) => (
+                <button
+                  key={place.label}
+                  type="button"
+                  onClick={() =>
+                    tripType === "cruise" && place.label.includes("Terminal")
+                      ? setQuickPickup(place.address)
+                      : setQuickDestination(place.address)
+                  }
+                  className={chipClass}
+                >
+                  {place.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
+        <div className="grid gap-5 sm:grid-cols-2">
           <AddressField
             name="pickup"
             label="Pickup address"
@@ -446,7 +609,8 @@ function BookingFormInner() {
               setPickup(value);
               setPickupCoord(coords ?? null);
             }}
-            placeholder="e.g. Dover Priory Station, Dover CT16 1EF"
+            placeholder={tripDefaults.pickupPlaceholder}
+            hint="Type and tap your address from the list"
           />
           <AddressField
             name="destination"
@@ -456,16 +620,43 @@ function BookingFormInner() {
               setDestination(value);
               setDestinationCoord(coords ?? null);
             }}
-            placeholder="e.g. London Gatwick Airport, RH6 0NP"
+            placeholder={tripDefaults.destinationPlaceholder}
+            hint="Type and tap your address from the list"
           />
 
           <label className="block text-sm font-medium text-navy">
             Pickup date
-            <input name="pickup_date" type="date" required className={inputClass} />
+            <input
+              name="pickup_date"
+              type="date"
+              required
+              defaultValue={searchParams.get("pickup_date") ?? tomorrowIsoDate()}
+              className={inputClass}
+            />
           </label>
           <label className="block text-sm font-medium text-navy">
             Pickup time
-            <input name="pickup_time" type="time" required className={inputClass} />
+            <input
+              name="pickup_time"
+              type="time"
+              required
+              defaultValue={searchParams.get("pickup_time") ?? ""}
+              className={inputClass}
+            />
+            <span className="mt-1 block text-xs font-normal text-muted">
+              {tripDefaults.transferHint}
+            </span>
+          </label>
+
+          <label className="block text-sm font-medium text-navy sm:col-span-2">
+            {tripDefaults.transferDetailLabel}
+            <input
+              type="text"
+              value={transferDetail}
+              onChange={(event) => setTransferDetail(event.target.value)}
+              className={inputClass}
+              placeholder={tripDefaults.transferDetailPlaceholder}
+            />
           </label>
         </div>
 
@@ -477,25 +668,12 @@ function BookingFormInner() {
           tariffLabel={farePreview?.tariffLabel ?? null}
           passengers={passengers}
           onPassengersChange={setPassengers}
-          luggageSmall={luggageSmall}
-          luggageLarge={luggageLarge}
-          onLuggageSmallChange={setLuggageSmall}
-          onLuggageLargeChange={setLuggageLarge}
           paymentMethod={paymentMethod}
           onPaymentMethodChange={setPaymentMethod}
-          returnTrip={returnTrip}
-          onReturnTripChange={(value) => {
-            setReturnTrip(value);
-            if (!value) setReturnMode(null);
-            else if (!returnMode) setReturnMode("same");
-          }}
-          onReturnSame={handleReturnSame}
-          onReturnReverse={handleReturnReverse}
-          returnNote={returnNote}
         />
 
         {fareError ? (
-          <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <p className="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900">
             {fareError}
           </p>
         ) : null}
@@ -504,13 +682,75 @@ function BookingFormInner() {
           <p className="text-xs text-muted">{farePreview.note}</p>
         ) : null}
 
+        <details className="rounded-xl border border-navy/10 bg-slate-50/50 px-4 py-3">
+          <summary className="cursor-pointer text-sm font-semibold text-navy">
+            More options (optional)
+          </summary>
+          <div className="pt-3">
+            <BookingTripAdvanced
+              luggageSmall={luggageSmall}
+              luggageLarge={luggageLarge}
+              onLuggageSmallChange={setLuggageSmall}
+              onLuggageLargeChange={setLuggageLarge}
+              paymentMethod={paymentMethod}
+              onPaymentMethodChange={setPaymentMethod}
+              returnTrip={returnTrip}
+              onReturnTripChange={(value) => {
+                setReturnTrip(value);
+                if (!value) setReturnMode(null);
+                else if (!returnMode) setReturnMode("same");
+              }}
+              onReturnSame={handleReturnSame}
+              onReturnReverse={handleReturnReverse}
+              returnNote={returnNote}
+            />
+          </div>
+        </details>
+
+        <div className="border-t border-navy/10 pt-5">
+          <p className="text-sm font-semibold text-navy">Your contact details</p>
+          <div className="mt-4 grid gap-5 sm:grid-cols-2">
+            <label className="block text-sm font-medium text-navy">
+              Full name
+              <input
+                name="customer_name"
+                required
+                autoComplete="name"
+                className={inputClass}
+                placeholder="John Smith"
+              />
+            </label>
+            <label className="block text-sm font-medium text-navy">
+              Mobile number
+              <input
+                name="phone"
+                type="tel"
+                required
+                autoComplete="tel"
+                className={inputClass}
+                placeholder="07..."
+              />
+            </label>
+            <label className="block text-sm font-medium text-navy sm:col-span-2">
+              Email <span className="font-normal text-muted">(optional)</span>
+              <input
+                name="email"
+                type="email"
+                autoComplete="email"
+                className={inputClass}
+                placeholder="For confirmation — not required"
+              />
+            </label>
+          </div>
+        </div>
+
         <label className="block text-sm font-medium text-navy">
-          Notes
+          Other notes
           <textarea
             name="notes"
-            rows={3}
+            rows={2}
             className={inputClass}
-            placeholder="Flight number, wheelchair access, special instructions..."
+            placeholder="Wheelchair, child seat, meet at arrivals hall…"
           />
         </label>
 
@@ -522,8 +762,8 @@ function BookingFormInner() {
             className="mt-1 h-4 w-4 rounded border-navy/20 text-gold focus:ring-gold"
           />
           <span>
-            I agree that {BRAND_NAME} may use my contact details to process this
-            booking and contact me about this journey.
+            I agree that {BRAND_NAME} may use my contact details to process this booking and
+            contact me about this journey.
           </span>
         </label>
 
@@ -533,26 +773,51 @@ function BookingFormInner() {
           </p>
         ) : null}
 
+        <BookingFareSummary
+          distanceMiles={farePreview?.distanceMiles ?? null}
+          durationMinutes={farePreview?.durationMinutes ?? null}
+          fareFormatted={farePreview?.fareFormatted ?? null}
+          fareLoading={fareLoading}
+          tariffLabel={farePreview?.tariffLabel ?? null}
+          compact
+        />
+
         <button
           type="submit"
           disabled={state === "submitting"}
-          className="w-full rounded-full bg-brand-green py-3.5 text-base font-semibold text-white shadow-md hover:bg-brand-green-dark disabled:opacity-60 sm:w-auto sm:min-w-[10rem] sm:px-10"
+          className="w-full rounded-full bg-brand-green py-3.5 text-base font-semibold text-white shadow-md hover:bg-brand-green-dark disabled:opacity-60"
         >
-          {state === "submitting"
-            ? requiresOnlineCardPayment(paymentMethod)
-              ? "Redirecting to secure payment…"
-              : "Sending to dispatch…"
-            : requiresOnlineCardPayment(paymentMethod)
-              ? farePreview?.fareFormatted
-                ? `Pay ${farePreview.fareFormatted} by card`
-                : "Pay by card"
-              : "Book"}
+          {submitLabel}
         </button>
+
+        <p className="text-center text-xs text-muted">
+          Prefer to talk?{" "}
+          <a href={`tel:${telHref(primaryPhone)}`} className="font-semibold text-brand-green">
+            Call {primaryPhone}
+          </a>{" "}
+          or{" "}
+          <a
+            href={whatsappHref("Hi, I'd like to book a taxi.")}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-brand-green"
+          >
+            WhatsApp
+          </a>
+        </p>
       </form>
 
-      <div className="lg:sticky lg:top-24 lg:self-start">
+      <div className="hidden lg:sticky lg:top-24 lg:block lg:self-start">
         <RouteMapPanel mapData={farePreview?.map ?? null} />
       </div>
+    </div>
+  );
+}
+
+function BookingFormFallback() {
+  return (
+    <div className="rounded-2xl border border-navy/8 bg-white p-8 text-center text-muted">
+      Loading booking form…
     </div>
   );
 }
@@ -560,7 +825,9 @@ function BookingFormInner() {
 export function BookingForm() {
   return (
     <BookingMapsProvider>
-      <BookingFormInner />
+      <Suspense fallback={<BookingFormFallback />}>
+        <BookingFormInner />
+      </Suspense>
     </BookingMapsProvider>
   );
 }

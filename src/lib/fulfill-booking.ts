@@ -8,7 +8,11 @@ import {
 } from "@/lib/booking";
 import { saveBookingViaDispatch } from "@/lib/dispatch-save";
 import { buildFareEstimate } from "@/lib/fare-estimate";
-import { canSendBookingEmail, sendBookingEmails } from "@/lib/notify";
+import {
+  canSendBookingEmail,
+  sendBookingEmails,
+  sendDispatchNotification,
+} from "@/lib/notify";
 import { dispatchPassengerFulfillUrl, dispatchPaymentSecret } from "@/lib/payment-proxy";
 
 export type CardPaymentInfo = {
@@ -20,12 +24,24 @@ export type FulfillBookingResult = {
   ok: boolean;
   recordId?: string;
   emailSent: boolean;
+  dispatchNotified: boolean;
   bookingSaved: boolean;
   needsReview: boolean;
   estimatedFare: number | null;
   warnings: string[];
   error?: string;
 };
+
+function logFulfillWarnings(booking: WebBookingInput, warnings: string[]): void {
+  if (warnings.length === 0) return;
+  console.error("[booking-fulfill] Completed with warnings", {
+    customer: booking.customer_name,
+    phone: booking.phone,
+    pickup: booking.pickup,
+    destination: booking.destination,
+    warnings,
+  });
+}
 
 export async function fulfillWebBooking(
   booking: WebBookingInput,
@@ -37,6 +53,7 @@ export async function fulfillWebBooking(
   const errors: string[] = [];
   let recordId: string | undefined;
   let emailSent = false;
+  let dispatchNotified = false;
   let bookingSaved = false;
 
   let estimatedFare = options?.estimatedFare ?? null;
@@ -76,6 +93,7 @@ export async function fulfillWebBooking(
         ok: true,
         recordId: existingId,
         emailSent: false,
+        dispatchNotified: false,
         bookingSaved: true,
         needsReview: shouldReviewWebBooking(booking),
         estimatedFare,
@@ -85,6 +103,7 @@ export async function fulfillWebBooking(
   }
 
   let cardHandledByDispatch = false;
+  let customerEmailFromDispatch = false;
 
   if (!bookingSaved) {
     try {
@@ -114,7 +133,8 @@ export async function fulfillWebBooking(
         recordId = fulfillData.record_id;
         bookingSaved = true;
         cardHandledByDispatch = true;
-        emailSent = fulfillData.customer_email_sent === true;
+        customerEmailFromDispatch = fulfillData.customer_email_sent === true;
+        emailSent = customerEmailFromDispatch;
       } else {
         const saved = await saveBookingViaDispatch(bookingWithPayment, estimatedFare, {
           squarePaymentId: options?.cardPayment?.sessionId,
@@ -126,6 +146,7 @@ export async function fulfillWebBooking(
             ok: true,
             recordId,
             emailSent: false,
+            dispatchNotified: false,
             bookingSaved: true,
             needsReview: shouldReviewWebBooking(booking),
             estimatedFare,
@@ -152,7 +173,7 @@ export async function fulfillWebBooking(
     }
   }
 
-  if (bookingSaved && canSendBookingEmail() && !emailSent && !cardHandledByDispatch) {
+  if (bookingSaved && canSendBookingEmail()) {
     const paymentId = options?.cardPayment?.sessionId?.trim();
     const shouldSend =
       !paymentId ||
@@ -161,11 +182,20 @@ export async function fulfillWebBooking(
 
     if (shouldSend) {
       try {
-        const emailResult = await sendBookingEmails(bookingWithPayment, estimatedFare);
-        const wantsCustomerEmail = Boolean(booking.email?.trim());
-        emailSent =
-          emailResult.dispatchSent && (!wantsCustomerEmail || emailResult.customerSent);
-        errors.push(...emailResult.errors);
+        if (cardHandledByDispatch) {
+          const adminResult = await sendDispatchNotification(
+            bookingWithPayment,
+            estimatedFare,
+          );
+          dispatchNotified = adminResult.dispatchSent;
+          errors.push(...adminResult.errors);
+          emailSent = customerEmailFromDispatch;
+        } else {
+          const emailResult = await sendBookingEmails(bookingWithPayment, estimatedFare);
+          dispatchNotified = emailResult.dispatchSent;
+          emailSent = emailResult.customerSent;
+          errors.push(...emailResult.errors);
+        }
       } catch (error) {
         errors.push(
           error instanceof Error ? error.message : "Could not send booking email.",
@@ -175,9 +205,11 @@ export async function fulfillWebBooking(
   }
 
   if (!bookingSaved) {
+    logFulfillWarnings(bookingWithPayment, errors);
     return {
       ok: false,
       emailSent,
+      dispatchNotified,
       bookingSaved: false,
       needsReview: shouldReviewWebBooking(booking),
       estimatedFare,
@@ -187,10 +219,13 @@ export async function fulfillWebBooking(
     };
   }
 
+  logFulfillWarnings(bookingWithPayment, errors);
+
   return {
     ok: true,
     recordId,
     emailSent,
+    dispatchNotified,
     bookingSaved,
     needsReview: shouldReviewWebBooking(booking),
     estimatedFare,

@@ -13,7 +13,6 @@ import {
   smtpTransportOptions,
 } from "@/lib/smtp";
 
-const DISPATCH_EMAIL = dispatchEmail();
 const SMTP_USER = process.env.SMTP_USER?.trim();
 const SMTP_PASS = process.env.SMTP_PASS?.trim();
 const RESEND_API_KEY = process.env.RESEND_API_KEY?.trim();
@@ -26,6 +25,13 @@ export type BookingEmailResult = {
   errors: string[];
 };
 
+type MailPayload = {
+  to: string | string[];
+  subject: string;
+  text: string;
+  replyTo?: string;
+};
+
 export function canSendBookingEmail(): boolean {
   return Boolean(
     RESEND_API_KEY ||
@@ -34,59 +40,79 @@ export function canSendBookingEmail(): boolean {
   );
 }
 
-export async function sendPlainEmail(options: {
-  to: string | string[];
-  subject: string;
-  text: string;
-  replyTo?: string;
-}): Promise<void> {
-  if (RESEND_API_KEY) {
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+function hasSmtp(): boolean {
+  return Boolean(SMTP_USER && SMTP_PASS);
+}
+
+function hasResend(): boolean {
+  return Boolean(RESEND_API_KEY);
+}
+
+async function sendViaResend(options: MailPayload): Promise<void> {
+  if (!RESEND_API_KEY) {
+    throw new Error("Resend is not configured.");
+  }
+
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${RESEND_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: EMAIL_FROM,
+      to: Array.isArray(options.to) ? options.to : [options.to],
+      subject: options.subject,
+      text: options.text,
+      reply_to: options.replyTo,
+    }),
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Resend failed: ${response.status} ${body}`);
+  }
+}
+
+async function sendViaSmtpOnly(options: MailPayload): Promise<void> {
+  if (!SMTP_USER || !SMTP_PASS) {
+    throw new Error("SMTP is not configured.");
+  }
+
+  const nodemailer = await import("nodemailer");
+  let lastError: Error | null = null;
+
+  for (const config of smtpTransportConfigs()) {
+    const transporter = nodemailer.createTransport(
+      smtpTransportOptions(SMTP_USER, SMTP_PASS, config),
+    );
+
+    try {
+      await transporter.sendMail({
         from: EMAIL_FROM,
-        to: Array.isArray(options.to) ? options.to : [options.to],
+        to: options.to,
+        replyTo: options.replyTo,
         subject: options.subject,
         text: options.text,
-        reply_to: options.replyTo,
-      }),
-    });
-
-    if (!response.ok) {
-      const body = await response.text();
-      throw new Error(`Email send failed: ${response.status} ${body}`);
+      });
+      return;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error("SMTP send failed.");
     }
+  }
+
+  throw lastError ?? new Error("SMTP send failed.");
+}
+
+export async function sendPlainEmail(options: MailPayload): Promise<void> {
+  if (hasResend()) {
+    await sendViaResend(options);
     return;
   }
 
-  if (SMTP_USER && SMTP_PASS) {
-    const nodemailer = await import("nodemailer");
-    let lastError: Error | null = null;
-
-    for (const config of smtpTransportConfigs()) {
-      const transporter = nodemailer.createTransport(
-        smtpTransportOptions(SMTP_USER, SMTP_PASS, config),
-      );
-
-      try {
-        await transporter.sendMail({
-          from: EMAIL_FROM,
-          to: options.to,
-          replyTo: options.replyTo,
-          subject: options.subject,
-          text: options.text,
-        });
-        return;
-      } catch (error) {
-        lastError = error instanceof Error ? error : new Error("SMTP send failed.");
-      }
-    }
-
-    throw lastError ?? new Error("SMTP send failed.");
+  if (hasSmtp()) {
+    await sendViaSmtpOnly(options);
+    return;
   }
 
   if (WEB3FORMS_ACCESS_KEY) {
@@ -97,7 +123,7 @@ export async function sendPlainEmail(options: {
         access_key: WEB3FORMS_ACCESS_KEY,
         subject: options.subject,
         from_name: "RideConnect UK",
-        email: options.replyTo || DISPATCH_EMAIL,
+        email: options.replyTo || dispatchEmail(),
         message: options.text,
       }),
     });
@@ -144,6 +170,90 @@ async function sendViaWeb3FormsDispatch(
   }
 }
 
+function logAdminEmailFailure(
+  booking: WebBookingInput,
+  to: string,
+  stage: string,
+  error: string,
+): void {
+  console.error("[booking-email] Admin notification failed", {
+    stage,
+    to,
+    error,
+    customer: booking.customer_name,
+    phone: booking.phone,
+    pickup: booking.pickup,
+    destination: booking.destination,
+    when: `${booking.pickup_date} ${booking.pickup_time}`,
+  });
+}
+
+/** Admin/dispatch alert with Resend → SMTP fallback (avoids silent info@→info@ Resend failures). */
+export async function sendDispatchNotification(
+  booking: WebBookingInput,
+  estimatedFare?: number | null,
+): Promise<Pick<BookingEmailResult, "dispatchSent" | "errors">> {
+  const errors: string[] = [];
+  const to = dispatchEmail();
+  const subject = dispatchBookingSubject(booking);
+  const text = dispatchNotificationBody(booking, estimatedFare);
+  const mail: MailPayload = {
+    to,
+    subject,
+    text,
+    replyTo: booking.email,
+  };
+
+  if (WEB3FORMS_ACCESS_KEY && !hasSmtp() && !hasResend()) {
+    try {
+      await sendViaWeb3FormsDispatch(booking, text);
+      return { dispatchSent: true, errors };
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Could not send dispatch email.";
+      errors.push(`Admin alert (Web3Forms): ${message}`);
+      logAdminEmailFailure(booking, to, "web3forms", message);
+      return { dispatchSent: false, errors };
+    }
+  }
+
+  try {
+    if (hasResend()) {
+      await sendViaResend(mail);
+    } else {
+      await sendViaSmtpOnly(mail);
+    }
+    return { dispatchSent: true, errors };
+  } catch (primaryError) {
+    const primaryMessage =
+      primaryError instanceof Error
+        ? primaryError.message
+        : "Could not send dispatch email.";
+    errors.push(`Admin alert (primary): ${primaryMessage}`);
+    logAdminEmailFailure(booking, to, hasResend() ? "resend" : "smtp", primaryMessage);
+
+    if (hasResend() && hasSmtp()) {
+      try {
+        await sendViaSmtpOnly(mail);
+        console.info("[booking-email] Admin notification sent via SMTP fallback", {
+          to,
+          customer: booking.customer_name,
+        });
+        return { dispatchSent: true, errors };
+      } catch (fallbackError) {
+        const fallbackMessage =
+          fallbackError instanceof Error
+            ? fallbackError.message
+            : "SMTP fallback failed.";
+        errors.push(`Admin alert (SMTP fallback): ${fallbackMessage}`);
+        logAdminEmailFailure(booking, to, "smtp-fallback", fallbackMessage);
+      }
+    }
+  }
+
+  return { dispatchSent: false, errors };
+}
+
 export async function sendBookingEmails(
   booking: WebBookingInput,
   estimatedFare?: number | null,
@@ -158,25 +268,9 @@ export async function sendBookingEmails(
   let dispatchSent = false;
   let customerSent = false;
 
-  const dispatchSummary = dispatchNotificationBody(booking, estimatedFare);
-
-  try {
-    if (WEB3FORMS_ACCESS_KEY && !SMTP_USER && !SMTP_PASS && !RESEND_API_KEY) {
-      await sendViaWeb3FormsDispatch(booking, dispatchSummary);
-    } else {
-      await sendPlainEmail({
-        to: DISPATCH_EMAIL,
-        subject: dispatchBookingSubject(booking),
-        text: dispatchSummary,
-        replyTo: booking.email,
-      });
-    }
-    dispatchSent = true;
-  } catch (error) {
-    errors.push(
-      error instanceof Error ? error.message : "Could not send dispatch email.",
-    );
-  }
+  const dispatchResult = await sendDispatchNotification(booking, estimatedFare);
+  dispatchSent = dispatchResult.dispatchSent;
+  errors.push(...dispatchResult.errors);
 
   if (isCustomerEmail(booking.email)) {
     try {
@@ -184,16 +278,31 @@ export async function sendBookingEmails(
         to: booking.email.trim(),
         subject: customerConfirmationSubject(booking),
         text: customerConfirmationBody(booking, estimatedFare),
-        replyTo: DISPATCH_EMAIL,
+        replyTo: dispatchEmail(),
       });
       customerSent = true;
     } catch (error) {
-      errors.push(
+      const message =
         error instanceof Error
           ? error.message
-          : "Could not send customer confirmation email.",
-      );
+          : "Could not send customer confirmation email.";
+      errors.push(`Customer confirmation: ${message}`);
+      console.error("[booking-email] Customer confirmation failed", {
+        to: booking.email,
+        error: message,
+        customer: booking.customer_name,
+      });
     }
+  }
+
+  if (!dispatchSent) {
+    console.error("[booking-email] Booking saved but admin was not notified", {
+      customer: booking.customer_name,
+      phone: booking.phone,
+      adminTo: dispatchEmail(),
+      customerSent,
+      errors,
+    });
   }
 
   return { dispatchSent, customerSent, errors };

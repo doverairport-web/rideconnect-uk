@@ -33,6 +33,7 @@ export async function POST(request: Request) {
       message: "Booking received. Our dispatch team will confirm your journey.",
       record_id: result.recordId,
       email_sent: result.emailSent,
+      dispatch_notified: result.dispatchNotified,
       booking_saved: result.bookingSaved,
       needs_review: result.needsReview,
       estimated_fare: result.estimatedFare ?? null,
