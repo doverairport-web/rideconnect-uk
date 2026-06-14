@@ -76,9 +76,3 @@ export const RC_GATWICK_AIRPORTS = [
 export const RC_PASSENGER_APP_URL = passengerWebUrl;
 
 export const RC_HERO_IMAGE = "/kenttravelhub/hero-dover.jpg";
-
-export const RC_APP_SCREENSHOTS = [
-  { src: "/rideconnect/app/home.png", alt: "RideConnect passenger app home screen" },
-  { src: "/rideconnect/app/booking.png", alt: "RideConnect passenger app booking chat" },
-  { src: "/rideconnect/app/profile.png", alt: "RideConnect passenger app profile" },
-] as const;

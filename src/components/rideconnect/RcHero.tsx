@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { customerBookUrl, passengerWebUrl } from "@/lib/apps";
-import { driverWebLoginUrl } from "@/lib/apps";
 import { RC_HERO_IMAGE } from "@/lib/rideconnect/content";
 import type { RideConnectSiteConfig } from "@/lib/rideconnect/sites";
 
@@ -38,22 +37,14 @@ export function RcHero({ site, showCorporateCtas = false }: Props) {
             Book Now
           </Link>
           {showCorporateCtas ? (
-            <>
-              <a
-                href={passengerWebUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="rounded-full border border-white/25 px-6 py-3 font-medium text-white hover:border-brand-green hover:text-brand-green"
-              >
-                Open Passenger App
-              </a>
-              <a
-                href={driverWebLoginUrl}
-                className="rounded-full border border-white/25 px-6 py-3 font-medium text-white hover:border-brand-green hover:text-brand-green"
-              >
-                Become a Driver
-              </a>
-            </>
+            <a
+              href={passengerWebUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-full border border-white/25 px-6 py-3 font-medium text-white hover:border-brand-green hover:text-brand-green"
+            >
+              Open Passenger App
+            </a>
           ) : (
             <Link
               href={passengerWebUrl}
