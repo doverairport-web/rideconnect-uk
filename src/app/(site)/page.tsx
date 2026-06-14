@@ -4,7 +4,6 @@ import { DestinationSection } from "@/components/DestinationSection";
 import { TownCards } from "@/components/TownCards";
 import { TownHubSection } from "@/components/TownHubSection";
 import { RcBookSection } from "@/components/rideconnect/RcBookSection";
-import { RcDriverNetwork } from "@/components/rideconnect/RcDriverNetwork";
 import { RcHero } from "@/components/rideconnect/RcHero";
 import { RcPassengerApp } from "@/components/rideconnect/RcPassengerApp";
 import { RcSchoolTransport } from "@/components/rideconnect/RcSchoolTransport";
@@ -76,7 +75,6 @@ export default function HomePage() {
       </section>
 
       <RcWhyRideConnect />
-      <RcDriverNetwork />
       <RcVoiceBooking />
       <RcBookSection />
     </>

@@ -1,6 +1,5 @@
 import { RcBookSection } from "@/components/rideconnect/RcBookSection";
 import { RcCoverageAreas } from "@/components/rideconnect/RcCoverageAreas";
-import { RcDriverNetwork } from "@/components/rideconnect/RcDriverNetwork";
 import { RcHero } from "@/components/rideconnect/RcHero";
 import { RcPassengerApp } from "@/components/rideconnect/RcPassengerApp";
 import { RcSchoolTransport } from "@/components/rideconnect/RcSchoolTransport";
@@ -17,7 +16,6 @@ export default function RideConnectHomePage() {
       <RcHero site={site} showCorporateCtas />
       <RcServices />
       <RcPassengerApp />
-      <RcDriverNetwork />
       <RcCoverageAreas />
       <RcSchoolTransport />
       <RcWhyRideConnect />

@@ -59,13 +59,6 @@ export const RC_SCHOOL_FEATURES = [
   "Reliable pickup times",
 ] as const;
 
-export const RC_DRIVER_BENEFITS = [
-  "See jobs on your phone — accept trips in seconds",
-  "Fair dispatch fees with transparent job details",
-  "Built for Kent airport and cruise work",
-  "Sign in via the RideConnect driver web app",
-] as const;
-
 export const RC_GATWICK_AIRPORTS = [
   { code: "gatwick", label: "Gatwick", highlight: true },
   { code: "heathrow", label: "Heathrow", highlight: true },

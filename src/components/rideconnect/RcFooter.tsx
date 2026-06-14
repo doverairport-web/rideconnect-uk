@@ -1,4 +1,4 @@
-import { CustomerAppDownload, DriverWebLogin } from "@/components/AppStoreButtons";
+import { CustomerAppDownload } from "@/components/AppStoreButtons";
 import Image from "next/image";
 import { ContactLinks } from "@/components/ContactLinks";
 import { customerBookUrl, passengerWebUrl } from "@/lib/apps";
@@ -72,12 +72,6 @@ export function RcFooter({ site }: Props) {
         <div>
           <p className="font-medium text-brand-green">Contact</p>
           <ContactLinks className="mt-3 text-sm text-white/80" />
-          <DriverWebLogin
-            className="mt-6"
-            variant="dark"
-            title="Driver login"
-            subtitle="Licensed drivers — sign in to accept jobs."
-          />
         </div>
       </div>
       <div className="border-t border-white/10 py-4 text-center text-xs text-white/50">
