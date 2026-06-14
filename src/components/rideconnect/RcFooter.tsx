@@ -17,13 +17,13 @@ export function RcFooter({ site }: Props) {
     <footer className="border-t border-white/10 bg-navy text-white">
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:px-6 md:grid-cols-4">
         <div className="md:col-span-2">
-          <div className="inline-block rounded-lg bg-white p-2">
+          <div className="inline-block rounded-lg bg-white p-2.5">
             <Image
               src="/rideconnect-logo.png"
               alt={BRAND_LEGAL}
-              width={1024}
-              height={682}
-              className="h-10 w-auto"
+              width={180}
+              height={120}
+              className="h-9 w-auto max-w-[180px] object-contain"
             />
           </div>
           <p className="mt-3 text-sm font-semibold text-brand-green">{site.localSubtitle}</p>

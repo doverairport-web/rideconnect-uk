@@ -76,3 +76,22 @@ export const RC_GATWICK_AIRPORTS = [
 export const RC_PASSENGER_APP_URL = passengerWebUrl;
 
 export const RC_HERO_IMAGE = "/kenttravelhub/hero-dover.jpg";
+
+export const RC_PASSENGER_SCREENSHOTS = [
+  {
+    src: "/rideconnect/passenger/home.png",
+    alt: "RideConnect UK passenger app home — book taxi, airport and cruise transfers",
+  },
+  {
+    src: "/rideconnect/passenger/airport-gatwick.png",
+    alt: "Book Dover to Gatwick airport transfer with fixed fare in the passenger app",
+  },
+  {
+    src: "/rideconnect/passenger/airport-heathrow.png",
+    alt: "Book Dover cruise terminal to Heathrow transfer in the passenger app",
+  },
+  {
+    src: "/rideconnect/passenger/airport-picker.png",
+    alt: "Choose Gatwick, Heathrow, Stansted or Luton in the RideConnect passenger app",
+  },
+] as const;

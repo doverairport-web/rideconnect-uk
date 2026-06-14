@@ -7,15 +7,19 @@ type LogoProps = {
   priority?: boolean;
 };
 
-export function Logo({ className = "h-11 w-auto sm:h-12", priority = false }: LogoProps) {
+export function Logo({ className, priority = false }: LogoProps) {
+  const logoClass =
+    className ??
+    "h-9 w-auto max-w-[180px] object-contain object-left sm:h-10 sm:max-w-[200px]";
+
   return (
     <Link href="/" className="inline-flex shrink-0 items-center">
       <Image
         src="/rideconnect-logo.png"
         alt={`${BRAND_NAME} — taxi booking in Dover, Kent`}
-        width={1024}
-        height={682}
-        className={className}
+        width={180}
+        height={120}
+        className={logoClass}
         priority={priority}
       />
     </Link>
