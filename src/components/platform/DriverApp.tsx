@@ -3,7 +3,7 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import type { PlatformJob } from "@/lib/platform/types";
 import { formatGbp } from "@/lib/platform/fees";
-import { PAYMENT_LABELS } from "@/lib/platform/labels";
+import { DRIVER_STATUS_LABELS, PAYMENT_LABELS } from "@/lib/platform/labels";
 import { OPERATOR_NAME } from "@/lib/platform/constants";
 
 type DriverInfo = {
@@ -18,6 +18,12 @@ type Earnings = {
   gross: number;
   fees: number;
   net: number;
+};
+
+type CompletionSuccess = {
+  reference: string;
+  fareGbp: number;
+  payoutGbp: number;
 };
 
 function formatWhen(job: PlatformJob): string {
@@ -45,6 +51,9 @@ export function DriverApp() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [actingId, setActingId] = useState<string | null>(null);
+  const [confirmJob, setConfirmJob] = useState<PlatformJob | null>(null);
+  const [completionSuccess, setCompletionSuccess] =
+    useState<CompletionSuccess | null>(null);
 
   const loadJobs = useCallback(async () => {
     setLoading(true);
@@ -138,29 +147,78 @@ export function DriverApp() {
     setAvailable([]);
     setMine([]);
     setEarnings(null);
+    setConfirmJob(null);
+    setCompletionSuccess(null);
   }
 
-  async function runJobAction(
+  async function postJobAction(
     jobId: string,
     action: "accept" | "start" | "complete",
-  ) {
+  ): Promise<{ ok: boolean; job?: PlatformJob; error?: string }> {
+    const response = await fetch(`/api/driver/jobs/${jobId}/${action}`, {
+      method: "POST",
+    });
+    const data = (await response.json()) as {
+      ok?: boolean;
+      job?: PlatformJob;
+      error?: string;
+    };
+    if (!response.ok || !data.ok) {
+      return { ok: false, error: data.error || `Could not ${action} job.` };
+    }
+    return { ok: true, job: data.job };
+  }
+
+  async function acceptJob(jobId: string) {
     setActingId(jobId);
     setMessage("");
     try {
-      const response = await fetch(`/api/driver/jobs/${jobId}/${action}`, {
-        method: "POST",
-      });
-      const data = (await response.json()) as { ok?: boolean; error?: string };
-      if (!response.ok || !data.ok) {
-        setMessage(data.error || `Could not ${action} job.`);
+      const accepted = await postJobAction(jobId, "accept");
+      if (!accepted.ok) {
+        setMessage(accepted.error || "Could not accept job.");
         return;
       }
+      await postJobAction(jobId, "start");
       await loadJobs();
     } catch {
-      setMessage(`Could not ${action} job.`);
+      setMessage("Could not accept job.");
     } finally {
       setActingId(null);
     }
+  }
+
+  async function confirmCompleteJob() {
+    if (!confirmJob) return;
+
+    const job = confirmJob;
+    setConfirmJob(null);
+    setActingId(job.id);
+    setMessage("");
+    try {
+      const result = await postJobAction(job.id, "complete");
+      if (!result.ok) {
+        setMessage(result.error || "Could not complete job.");
+        return;
+      }
+
+      const completed = result.job ?? job;
+      setCompletionSuccess({
+        reference: completed.reference,
+        fareGbp: completed.offeredFareGbp,
+        payoutGbp: completed.driverPayoutGbp,
+      });
+      setMine([]);
+      await loadJobs();
+    } catch {
+      setMessage("Could not complete job.");
+    } finally {
+      setActingId(null);
+    }
+  }
+
+  function dismissCompletion() {
+    setCompletionSuccess(null);
+    void loadJobs();
   }
 
   if (authed === null) {
@@ -268,7 +326,7 @@ export function DriverApp() {
         {mine.length > 0 ? (
           <section className="space-y-3">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">
-              Your active jobs
+              Your active job
             </h2>
             {mine.map((job) => (
               <article
@@ -277,7 +335,14 @@ export function DriverApp() {
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="font-mono text-xs text-muted">{job.reference}</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-mono text-xs text-muted">{job.reference}</p>
+                      {job.status === "accepted" || job.status === "in_progress" ? (
+                        <span className="rounded-full bg-navy/10 px-2 py-0.5 text-xs font-semibold text-navy">
+                          {DRIVER_STATUS_LABELS[job.status]}
+                        </span>
+                      ) : null}
+                    </div>
                     <p className="mt-1 font-semibold text-navy">{job.pickup}</p>
                     {job.destination ? (
                       <p className="text-sm text-navy">→ {job.destination}</p>
@@ -300,28 +365,14 @@ export function DriverApp() {
                     {job.notes}
                   </p>
                 ) : null}
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {job.status === "accepted" ? (
-                    <button
-                      type="button"
-                      disabled={actingId === job.id}
-                      onClick={() => void runJobAction(job.id, "start")}
-                      className="flex-1 rounded-xl bg-navy py-3 text-sm font-semibold text-white disabled:opacity-60"
-                    >
-                      Start trip
-                    </button>
-                  ) : null}
-                  {job.status === "accepted" || job.status === "in_progress" ? (
-                    <button
-                      type="button"
-                      disabled={actingId === job.id}
-                      onClick={() => void runJobAction(job.id, "complete")}
-                      className="flex-1 rounded-xl bg-brand-green py-3 text-sm font-semibold text-white disabled:opacity-60"
-                    >
-                      Complete
-                    </button>
-                  ) : null}
-                </div>
+                <button
+                  type="button"
+                  disabled={actingId === job.id}
+                  onClick={() => setConfirmJob(job)}
+                  className="mt-4 w-full rounded-xl bg-brand-green py-3.5 text-base font-bold text-white hover:bg-brand-green-dark disabled:opacity-60"
+                >
+                  Complete job
+                </button>
               </article>
             ))}
           </section>
@@ -330,7 +381,7 @@ export function DriverApp() {
         <section className="space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">
-              Available jobs
+              {mine.length > 0 ? "More jobs" : "Available jobs"}
             </h2>
             <button
               type="button"
@@ -343,7 +394,9 @@ export function DriverApp() {
 
           {available.length === 0 ? (
             <p className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-muted">
-              No open jobs right now. Pull to refresh in a moment.
+              {mine.length > 0
+                ? "Finish your current job to see more offers."
+                : "No open jobs right now. Pull to refresh in a moment."}
             </p>
           ) : (
             available.map((job) => (
@@ -380,7 +433,7 @@ export function DriverApp() {
                 <button
                   type="button"
                   disabled={actingId === job.id || mine.length > 0}
-                  onClick={() => void runJobAction(job.id, "accept")}
+                  onClick={() => void acceptJob(job.id)}
                   className="mt-4 w-full rounded-xl bg-brand-green py-3.5 text-base font-bold text-white hover:bg-brand-green-dark disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {mine.length > 0 ? "Finish current job first" : "Accept job"}
@@ -390,6 +443,77 @@ export function DriverApp() {
           )}
         </section>
       </main>
+
+      {confirmJob ? (
+        <div className="fixed inset-0 z-20 flex items-end justify-center bg-navy/50 p-4 sm:items-center">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="complete-job-title"
+            className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl"
+          >
+            <h2 id="complete-job-title" className="text-xl font-bold text-navy">
+              Complete this journey?
+            </h2>
+            <p className="mt-2 text-sm text-muted">
+              {confirmJob.pickup}
+              {confirmJob.destination ? ` → ${confirmJob.destination}` : ""}
+            </p>
+            <div className="mt-6 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setConfirmJob(null)}
+                className="flex-1 rounded-xl border border-slate-200 py-3 text-sm font-semibold text-navy hover:bg-cream"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={actingId === confirmJob.id}
+                onClick={() => void confirmCompleteJob()}
+                className="flex-1 rounded-xl bg-brand-green py-3 text-sm font-semibold text-white hover:bg-brand-green-dark disabled:opacity-60"
+              >
+                Complete
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {completionSuccess ? (
+        <div className="fixed inset-0 z-30 flex items-center justify-center bg-navy/60 p-4">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="journey-complete-title"
+            className="w-full max-w-sm rounded-2xl bg-white p-8 text-center shadow-xl"
+          >
+            <p className="text-4xl text-brand-green" aria-hidden="true">
+              ✓
+            </p>
+            <h2 id="journey-complete-title" className="mt-3 text-2xl font-bold text-navy">
+              Journey completed
+            </h2>
+            <p className="mt-1 font-mono text-xs text-muted">
+              {completionSuccess.reference}
+            </p>
+            <p className="mt-6 text-sm text-muted">Fare amount</p>
+            <p className="mt-1 text-4xl font-bold text-navy">
+              {formatGbp(completionSuccess.fareGbp)}
+            </p>
+            <p className="mt-2 text-sm text-brand-green">
+              You keep {formatGbp(completionSuccess.payoutGbp)}
+            </p>
+            <button
+              type="button"
+              onClick={dismissCompletion}
+              className="mt-8 w-full rounded-xl bg-navy py-3.5 text-base font-bold text-white hover:bg-navy/90"
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

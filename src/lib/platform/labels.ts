@@ -2,10 +2,15 @@ import type { JobStatus, PaymentType } from "@/lib/platform/types";
 
 export const STATUS_LABELS: Record<JobStatus, string> = {
   open: "Open",
-  accepted: "Accepted",
-  in_progress: "In progress",
+  accepted: "Confirmed",
+  in_progress: "On trip",
   completed: "Completed",
   cancelled: "Cancelled",
+};
+
+export const DRIVER_STATUS_LABELS: Record<"accepted" | "in_progress", string> = {
+  accepted: "Confirmed",
+  in_progress: "On trip",
 };
 
 export const PAYMENT_LABELS: Record<PaymentType, string> = {
