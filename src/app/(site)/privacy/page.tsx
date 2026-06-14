@@ -80,14 +80,12 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-navy">RideConnect Driver app</h2>
+            <h2 className="text-xl font-semibold text-navy">RideConnect driver web app</h2>
             <p className="mt-3 text-muted">
-              The RideConnect Driver app is for licensed drivers on our network. It may
-              access location in the foreground and background while you are online or
-              on an active job, so dispatch and passengers can track trip progress. Chat
-              and profile features use your account contact details. You can manage
-              location permissions in your device settings; some features may not work
-              if location is disabled.
+              Licensed drivers on our network sign in via the RideConnect driver web
+              app to accept jobs from dispatch. It may access location while you are
+              online or on an active job. You can manage location permissions in your
+              device settings.
             </p>
           </section>
 

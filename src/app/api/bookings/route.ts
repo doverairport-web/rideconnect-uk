@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server";
-import {
-  createAirtableBooking,
-  parseWebBookingBody,
-  shouldReviewWebBooking,
-} from "@/lib/booking";
+import { parseWebBookingBody } from "@/lib/booking";
+import { fulfillWebBooking } from "@/lib/fulfill-booking";
 
 export async function POST(request: Request) {
   try {
@@ -21,14 +18,25 @@ export async function POST(request: Request) {
       );
     }
 
-    const airtable = await createAirtableBooking(booking);
-    const record = airtable.records?.[0];
+    const clientFare = Number(body.estimated_fare);
+    const estimatedFare =
+      Number.isFinite(clientFare) && clientFare > 0 ? clientFare : undefined;
+
+    const result = await fulfillWebBooking(booking, { estimatedFare });
+
+    if (!result.ok) {
+      return NextResponse.json({ ok: false, error: result.error }, { status: 500 });
+    }
 
     return NextResponse.json({
       ok: true,
       message: "Booking received. Our dispatch team will confirm your journey.",
-      record_id: record?.id,
-      needs_review: shouldReviewWebBooking(booking),
+      record_id: result.recordId,
+      email_sent: result.emailSent,
+      booking_saved: result.bookingSaved,
+      needs_review: result.needsReview,
+      estimated_fare: result.estimatedFare ?? null,
+      ...(result.warnings.length ? { warnings: result.warnings } : {}),
     });
   } catch (error) {
     return NextResponse.json(

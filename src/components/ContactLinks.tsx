@@ -1,4 +1,16 @@
-import { email, phones, telHref, whatsappDisplay, whatsappHref } from "@/lib/contact";
+import {
+  email,
+  phones,
+  telHref,
+  whatsappDisplay,
+  whatsappHref,
+} from "@/lib/contact";
+import {
+  GOOGLE_MAPS_URL,
+  GOOGLE_REVIEW_URL,
+  YELL_LISTING_URL,
+  YELL_REVIEW_URL,
+} from "@/lib/directories";
 
 export function ContactLinks({ className = "" }: { className?: string }) {
   return (
@@ -26,6 +38,46 @@ export function ContactLinks({ className = "" }: { className?: string }) {
           className="inline-flex items-center gap-1.5 hover:text-brand-green"
         >
           WhatsApp {whatsappDisplay}
+        </a>
+      </li>
+      <li>
+        <a
+          href={GOOGLE_MAPS_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:text-brand-green"
+        >
+          Google Maps
+        </a>
+      </li>
+      <li>
+        <a
+          href={GOOGLE_REVIEW_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:text-brand-green"
+        >
+          Leave a Google review
+        </a>
+      </li>
+      <li>
+        <a
+          href={YELL_LISTING_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:text-brand-green"
+        >
+          Find us on Yell
+        </a>
+      </li>
+      <li>
+        <a
+          href={YELL_REVIEW_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:text-brand-green"
+        >
+          Leave a Yell review
         </a>
       </li>
     </ul>

@@ -1,13 +1,121 @@
-import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/brand";
+import { HOMEKENT_SITE_URL } from "@/lib/homekent/brand";
+import { isHomeKentHost } from "@/lib/homekent/paths";
+import { getAllKthArticles } from "@/lib/kenttravelhub/articles";
+import { KTH_SITE_URL } from "@/lib/kenttravelhub/brand";
+import { isKentTravelHubHost } from "@/lib/kenttravelhub/host";
+import { getAllKthLandingPages } from "@/lib/kenttravelhub/landing-pages";
+import { KTH_SITE_SECTIONS } from "@/lib/kenttravelhub/sections";
+import type { MetadataRoute } from "next";
+import { headers } from "next/headers";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const host = (await headers()).get("host");
+
+  if (isHomeKentHost(host)) {
+    const base = HOMEKENT_SITE_URL.replace(/\/$/, "");
+    return [
+      {
+        url: base,
+        lastModified: new Date(),
+        changeFrequency: "weekly",
+        priority: 1,
+      },
+      {
+        url: `${base}/contact`,
+        lastModified: new Date(),
+        changeFrequency: "monthly",
+        priority: 0.8,
+      },
+      {
+        url: `${base}/privacy`,
+        lastModified: new Date(),
+        changeFrequency: "yearly",
+        priority: 0.3,
+      },
+    ];
+  }
+
+  if (isKentTravelHubHost(host)) {
+    const base = KTH_SITE_URL.replace(/\/$/, "");
+    const articles = getAllKthArticles();
+    const landingPages = getAllKthLandingPages();
+    return [
+      {
+        url: base,
+        lastModified: new Date(),
+        changeFrequency: "hourly",
+        priority: 1,
+      },
+      ...KTH_SITE_SECTIONS.map((section) => ({
+        url: `${base}${section.path}`,
+        lastModified: new Date(),
+        changeFrequency: "hourly" as const,
+        priority: 0.95,
+      })),
+      {
+        url: `${base}/cruise-terminal`,
+        lastModified: new Date(),
+        changeFrequency: "hourly",
+        priority: 1,
+      },
+      {
+        url: `${base}/news`,
+        lastModified: new Date(),
+        changeFrequency: "weekly",
+        priority: 0.9,
+      },
+      ...articles.map((article) => ({
+        url: `${base}/news/${article.slug}`,
+        lastModified: new Date(article.updatedAt),
+        changeFrequency: "weekly" as const,
+        priority: 0.85,
+      })),
+      ...landingPages.map((page) => ({
+        url: `${base}/taxi/${page.slug}`,
+        lastModified: new Date(),
+        changeFrequency: "weekly" as const,
+        priority: 0.92,
+      })),
+      {
+        url: `${base}/contact`,
+        lastModified: new Date(),
+        changeFrequency: "monthly",
+        priority: 0.8,
+      },
+      {
+        url: `${base}/book`,
+        lastModified: new Date(),
+        changeFrequency: "weekly",
+        priority: 0.95,
+      },
+      {
+        url: `${base}/privacy`,
+        lastModified: new Date(),
+        changeFrequency: "yearly",
+        priority: 0.3,
+      },
+    ];
+  }
+
   return [
     {
       url: SITE_URL,
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 1,
+    },
+    {
+      url: `${SITE_URL}/contact`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
+    {
+      url: `${SITE_URL}/book`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.9,
     },
   ];
 }

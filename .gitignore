@@ -32,6 +32,10 @@ yarn-error.log*
 .env
 .env*.local
 
+# private job ledger (local only)
+/data/personal-jobs.json
+/data/platform.json
+
 # vercel
 .vercel
 

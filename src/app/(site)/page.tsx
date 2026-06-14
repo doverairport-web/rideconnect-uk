@@ -1,4 +1,5 @@
 import { AirportPricing } from "@/components/AirportPricing";
+import { DriverWebLogin } from "@/components/AppStoreButtons";
 import { BookingForm } from "@/components/BookingForm";
 import { DestinationCards } from "@/components/DestinationCards";
 import { DestinationSection } from "@/components/DestinationSection";
@@ -45,6 +46,9 @@ export default function HomePage() {
                 Or call {primaryPhone}
               </a>
             </div>
+            <p className="mt-8 text-sm text-white/70">
+              Book online below or call — no app download needed.
+            </p>
           </div>
           <div className="rounded-2xl border border-white/10 bg-white/10 p-6 backdrop-blur sm:p-8">
             <p className="text-sm font-medium uppercase tracking-wide text-brand-green">
@@ -131,26 +135,42 @@ export default function HomePage() {
         </div>
       </section>
 
+      <section id="drivers" className="border-y border-navy/8 bg-white py-10">
+        <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <div className="max-w-xl">
+            <p className="text-xs font-semibold uppercase tracking-wider text-brand-green">
+              Drivers on our network
+            </p>
+            <h2 className="mt-2 text-xl font-bold text-navy sm:text-2xl">
+              Driver login
+            </h2>
+            <p className="mt-2 text-sm text-muted">
+              Licensed drivers on our network sign in on their phone to see jobs,
+              accept trips and update status. This is the RideConnect driver web app
+              we built — not the old Cabcher app on the App Store.
+            </p>
+          </div>
+          <DriverWebLogin variant="light" />
+        </div>
+      </section>
+
       <section id="book" className="bg-cream py-16">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <div className="grid gap-10 lg:grid-cols-5">
-            <div className="lg:col-span-2">
-              <h2 className="text-2xl font-bold text-navy sm:text-3xl">
-                Book online
-              </h2>
-              <p className="mt-3 text-muted">
-                Local pickups in Dover. For Deal, Folkestone, Canterbury or Ashford,
-                book airport transfers in advance — add your destination and flight
-                details in the notes.
-              </p>
-              <p className="mt-4 rounded-xl border border-navy/8 bg-white p-4 text-sm text-muted">
-                For airport, Paris, ferry or cruise trips, add your flight, destination
-                or ship name in the notes so dispatch can plan your pickup time.
-              </p>
-            </div>
-            <div className="rounded-2xl border border-navy/8 bg-white p-6 shadow-sm lg:col-span-3 sm:p-8">
-              <BookingForm />
-            </div>
+          <div className="max-w-3xl">
+            <h2 className="text-2xl font-bold text-navy sm:text-3xl">
+              Book online
+            </h2>
+            <p className="mt-3 text-muted">
+              Choose pickup and destination — we show the route on the map and an
+              approximate Dover Hackney meter fare before you confirm.
+            </p>
+            <p className="mt-4 rounded-xl border border-navy/8 bg-white p-4 text-sm text-muted">
+              For airport, Paris, ferry or cruise trips, add your flight, destination
+              or ship name in the notes so dispatch can plan your pickup time.
+            </p>
+          </div>
+          <div className="mt-10 rounded-2xl border border-navy/8 bg-white p-6 shadow-sm sm:p-8">
+            <BookingForm />
           </div>
         </div>
       </section>

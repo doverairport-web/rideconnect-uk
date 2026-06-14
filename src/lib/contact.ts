@@ -1,5 +1,5 @@
 const DEFAULT_PHONES = ["01304 350125", "01304 208208", "01304 350777"];
-const DEFAULT_EMAIL = "doverairport@gmail.com";
+const DEFAULT_EMAIL = "info@rideconnectuk.com";
 const DEFAULT_WHATSAPP = "07405 327650";
 
 function parsePhoneList(raw: string | undefined): string[] {
