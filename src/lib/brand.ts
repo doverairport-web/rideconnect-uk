@@ -1,7 +1,7 @@
 import { email } from "@/lib/contact";
 
 /** Customer-facing brand name */
-export const BRAND_NAME = "RideConnectUk";
+export const BRAND_NAME = "RideConnect UK";
 export const BRAND_LEGAL = "RideConnect UK";
 export const BRAND_TAGLINE = "Taxi & private hire — Dover, Kent";
 export const SITE_URL =

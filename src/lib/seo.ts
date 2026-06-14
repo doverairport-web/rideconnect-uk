@@ -1,40 +1,31 @@
-import { BRAND_NAME, SITE_URL } from "@/lib/brand";
+import { BRAND_LEGAL } from "@/lib/brand";
+import type { RideConnectSiteConfig } from "@/lib/rideconnect/sites";
 import { email, phones, primaryPhone, telHref } from "@/lib/contact";
-
 import { YELL_LISTING_URL } from "@/lib/directories";
 
 const GOOGLE_MAPS_URL =
   "https://www.google.com/maps/place/J.U.+Orion+Transport+%E2%80%93+Dover+Taxi+%26+Airport+Transfers/@51.1888713,1.2247614,17z";
 
-export const SEO_TITLE = "Dover Taxi | Book Online — Local & Airport Transfers Kent";
+export function localBusinessJsonLd(site?: RideConnectSiteConfig) {
+  const baseUrl = site?.siteUrl.replace(/\/$/, "") ?? "https://dovertaxi.co.uk";
+  const name = site?.schemaName ?? `${BRAND_LEGAL} — Dover Taxi`;
+  const description =
+    site?.seoDescription ??
+    "Book a Dover taxi online — local trips, hospital, station, cruise port and airport transfers.";
+  const alternateName = site?.schemaAlternateNames ?? ["RideConnect UK", "J.U. Orion Transport"];
 
-export const SEO_DESCRIPTION =
-  "Book a Dover taxi online — local trips, hospital, station, cruise port and airport transfers. Fixed fares to Gatwick and Heathrow. Call 01304 350125.";
-
-export const SEO_KEYWORDS = [
-  "Dover taxi",
-  "taxi Dover",
-  "book taxi Dover",
-  "Dover taxi numbers",
-  "local taxi Dover Kent",
-  "Dover hospital taxi",
-  "Dover Priory taxi",
-  BRAND_NAME,
-];
-
-export function localBusinessJsonLd() {
   return {
     "@context": "https://schema.org",
     "@type": ["LocalBusiness", "TaxiService"],
-    "@id": `${SITE_URL}/#localbusiness`,
-    name: "Dover Taxi — RideConnectUk",
-    alternateName: [BRAND_NAME, "J.U. Orion Transport"],
-    description: SEO_DESCRIPTION,
-    url: SITE_URL,
+    "@id": `${baseUrl}/#localbusiness`,
+    name,
+    alternateName,
+    description,
+    url: baseUrl,
     telephone: telHref(primaryPhone),
     email,
-    image: `${SITE_URL}/rideconnect-logo.png`,
-    logo: `${SITE_URL}/rideconnect-logo.png`,
+    image: `${baseUrl}/rideconnect-logo.png`,
+    logo: `${baseUrl}/rideconnect-logo.png`,
     address: {
       "@type": "PostalAddress",
       addressLocality: "Dover",
@@ -75,3 +66,20 @@ export function localBusinessJsonLd() {
     priceRange: "££",
   };
 }
+
+/** Dover Taxi default SEO — used when host-specific metadata is not applied. */
+export const SEO_TITLE = "Dover Taxi | Book Online — Local & Airport Transfers Kent";
+
+export const SEO_DESCRIPTION =
+  "Book a Dover taxi online — local trips, hospital, station, cruise port and airport transfers. Fixed fares to Gatwick and Heathrow. Call 01304 350125.";
+
+export const SEO_KEYWORDS = [
+  "Dover taxi",
+  "taxi Dover",
+  "book taxi Dover",
+  "Dover taxi numbers",
+  "local taxi Dover Kent",
+  "Dover hospital taxi",
+  "Dover Priory taxi",
+  "RideConnect UK",
+];

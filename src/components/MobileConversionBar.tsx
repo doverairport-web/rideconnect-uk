@@ -42,7 +42,7 @@ export function MobileConversionBar({
   bookHref,
   bookLabel = "Book",
   phone = primaryPhone,
-  whatsappMessage = "Hi, I'd like to book a taxi with RideConnectUk.",
+  whatsappMessage = "Hi, I'd like to book a taxi with RideConnect UK.",
   variant = "rideconnect",
 }: Props) {
   const tel = telHref(phone);

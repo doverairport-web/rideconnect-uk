@@ -1,5 +1,12 @@
 import { isHomeKentHost } from "@/lib/homekent/host";
 import { isKentTravelHubHost } from "@/lib/kenttravelhub/host";
+import {
+  isDoverToGatwickHost,
+  isOrionTaxisHost,
+  isRideConnectUkHost,
+  wwwHostForSite,
+} from "@/lib/rideconnect/host";
+import type { RideConnectSiteId } from "@/lib/rideconnect/sites";
 import { NextRequest, NextResponse } from "next/server";
 
 type SiteConfig = {
@@ -19,6 +26,24 @@ function isPublicPath(pathname: string, site: SiteConfig): boolean {
   );
 }
 
+const NETWORK_PASSTHROUGH = ["/book", "/driver", "/platform", "/private"];
+
+function rideConnectSiteConfig(
+  id: RideConnectSiteId,
+  isHost: (host: string | null) => boolean,
+  basePath: string,
+): SiteConfig {
+  return {
+    id,
+    isHost,
+    wwwHost: wwwHostForSite(id),
+    basePath,
+    publicPaths: new Set(["/"]),
+    publicPrefixes: [],
+    passthroughPrefixes: [...NETWORK_PASSTHROUGH, "/contact", "/privacy"],
+  };
+}
+
 const SITES: SiteConfig[] = [
   {
     id: "homekent",
@@ -27,12 +52,7 @@ const SITES: SiteConfig[] = [
     basePath: "/homekent",
     publicPaths: new Set(["/", "/contact", "/privacy"]),
     publicPrefixes: [],
-    passthroughPrefixes: [
-      "/book",
-      "/driver",
-      "/platform",
-      "/private",
-    ],
+    passthroughPrefixes: NETWORK_PASSTHROUGH,
   },
   {
     id: "kenttravelhub",
@@ -51,14 +71,20 @@ const SITES: SiteConfig[] = [
       "/stay",
       "/cruise-terminal",
     ],
-    passthroughPrefixes: [
-      "/book",
-      "/driver",
-      "/platform",
-      "/private",
-    ],
+    passthroughPrefixes: NETWORK_PASSTHROUGH,
   },
+  rideConnectSiteConfig("rideconnect", isRideConnectUkHost, "/rideconnect"),
+  rideConnectSiteConfig("oriontaxis", isOrionTaxisHost, "/oriontaxis"),
+  rideConnectSiteConfig("dovertogatwick", isDoverToGatwickHost, "/dovertogatwick"),
 ];
+
+function attachRequestHeaders(response: NextResponse, request: NextRequest, siteId?: string): NextResponse {
+  response.headers.set("x-pathname", request.nextUrl.pathname);
+  if (siteId) {
+    response.headers.set("x-site", siteId);
+  }
+  return response;
+}
 
 function handleSite(request: NextRequest, site: SiteConfig): NextResponse {
   const host = request.headers.get("host");
@@ -87,30 +113,33 @@ function handleSite(request: NextRequest, site: SiteConfig): NextResponse {
     const url = request.nextUrl.clone();
     url.pathname = `${site.basePath}${pathname === "/" ? "" : pathname}`;
     const response = NextResponse.rewrite(url);
-    response.headers.set("x-site", site.id);
-    return response;
+    return attachRequestHeaders(response, request, site.id);
   }
 
   const passthrough = site.passthroughPrefixes.some((prefix) =>
     pathname.startsWith(prefix),
   );
 
-  if (
-    !pathname.startsWith(site.basePath) &&
-    !passthrough
-  ) {
+  if (!pathname.startsWith(site.basePath) && !passthrough) {
     const url = request.nextUrl.clone();
     url.pathname = site.basePath;
     const response = NextResponse.rewrite(url);
-    response.headers.set("x-site", site.id);
-    return response;
+    return attachRequestHeaders(response, request, site.id);
   }
 
-  return NextResponse.next();
+  const response = NextResponse.next();
+  return attachRequestHeaders(response, request, passthrough ? site.id : undefined);
 }
 
 export function middleware(request: NextRequest) {
   const host = request.headers.get("host");
+  const hostname = host?.toLowerCase().split(":")[0] ?? "";
+
+  if (hostname === "www.dovertaxi.co.uk") {
+    const url = request.nextUrl.clone();
+    url.hostname = "dovertaxi.co.uk";
+    return NextResponse.redirect(url, 308);
+  }
 
   for (const site of SITES) {
     if (site.isHost(host)) {
@@ -118,7 +147,11 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  return NextResponse.next();
+  const response = NextResponse.next();
+  if (hostname === "dovertaxi.co.uk" || hostname === "dovertaxi.local") {
+    return attachRequestHeaders(response, request, "dovertaxi");
+  }
+  return attachRequestHeaders(response, request);
 }
 
 export const config = {

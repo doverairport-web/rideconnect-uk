@@ -1,5 +1,5 @@
 import { ContactLinks } from "@/components/ContactLinks";
-import { BRAND_LEGAL, BRAND_NAME, SITE_URL } from "@/lib/brand";
+import { BRAND_LEGAL } from "@/lib/brand";
 import {
   email,
   primaryPhone,
@@ -8,14 +8,16 @@ import {
   whatsappHref,
 } from "@/lib/contact";
 import { GOOGLE_MAPS_URL } from "@/lib/directories";
+import { rideConnectPageMetadata } from "@/lib/rideconnect/page-metadata";
 import type { Metadata } from "next";
 
-export const metadata: Metadata = {
-  title: `Contact | ${BRAND_NAME}`,
-  description:
-    "Call, email or WhatsApp RideConnectUk for Dover taxi bookings, airport transfers and general enquiries.",
-  alternates: { canonical: `${SITE_URL}/contact` },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return rideConnectPageMetadata(
+    "/contact",
+    `Contact | RideConnect UK`,
+    `Call, email or WhatsApp RideConnect UK for taxi bookings, airport transfers and general enquiries.`,
+  );
+}
 
 export default function ContactPage() {
   return (
@@ -44,7 +46,7 @@ export default function ContactPage() {
                 Call {primaryPhone}
               </a>
               <a
-                href={whatsappHref("Hi, I'd like to book a taxi.")}
+                href={whatsappHref("Hi, I'd like to book a taxi with RideConnect UK.")}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="rounded-full border border-navy/20 px-5 py-3 text-center text-sm font-semibold text-navy hover:border-brand-green hover:text-brand-green"

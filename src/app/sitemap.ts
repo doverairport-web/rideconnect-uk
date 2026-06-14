@@ -1,4 +1,3 @@
-import { SITE_URL } from "@/lib/brand";
 import { HOMEKENT_SITE_URL } from "@/lib/homekent/brand";
 import { isHomeKentHost } from "@/lib/homekent/paths";
 import { getAllKthArticles } from "@/lib/kenttravelhub/articles";
@@ -6,8 +5,44 @@ import { KTH_SITE_URL } from "@/lib/kenttravelhub/brand";
 import { isKentTravelHubHost } from "@/lib/kenttravelhub/host";
 import { getAllKthLandingPages } from "@/lib/kenttravelhub/landing-pages";
 import { KTH_SITE_SECTIONS } from "@/lib/kenttravelhub/sections";
+import {
+  isDoverTaxiHost,
+  isDoverToGatwickHost,
+  isOrionTaxisHost,
+  isRideConnectUkHost,
+} from "@/lib/rideconnect/host";
+import { siteUrlForId } from "@/lib/rideconnect/sites";
 import type { MetadataRoute } from "next";
 import { headers } from "next/headers";
+
+function networkSitemap(base: string): MetadataRoute.Sitemap {
+  return [
+    {
+      url: base,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 1,
+    },
+    {
+      url: `${base}/contact`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
+    {
+      url: `${base}/book`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.95,
+    },
+    {
+      url: `${base}/privacy`,
+      lastModified: new Date(),
+      changeFrequency: "yearly",
+      priority: 0.3,
+    },
+  ];
+}
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const host = (await headers()).get("host");
@@ -98,24 +133,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ];
   }
 
-  return [
-    {
-      url: SITE_URL,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 1,
-    },
-    {
-      url: `${SITE_URL}/contact`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.8,
-    },
-    {
-      url: `${SITE_URL}/book`,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.9,
-    },
-  ];
+  if (isRideConnectUkHost(host)) {
+    return networkSitemap(siteUrlForId("rideconnect"));
+  }
+
+  if (isOrionTaxisHost(host)) {
+    return networkSitemap(siteUrlForId("oriontaxis"));
+  }
+
+  if (isDoverToGatwickHost(host)) {
+    return networkSitemap(siteUrlForId("dovertogatwick"));
+  }
+
+  const base = isDoverTaxiHost(host)
+    ? siteUrlForId("dovertaxi")
+    : siteUrlForId("dovertaxi");
+
+  return networkSitemap(base);
 }

@@ -1,13 +1,15 @@
-import { BRAND_LEGAL, BRAND_NAME, SITE_URL } from "@/lib/brand";
+import { BRAND_LEGAL, BRAND_NAME } from "@/lib/brand";
 import { email } from "@/lib/contact";
+import { rideConnectPageMetadata } from "@/lib/rideconnect/page-metadata";
 import type { Metadata } from "next";
 
-export const metadata: Metadata = {
-  title: `Privacy Policy | ${BRAND_NAME}`,
-  description:
+export async function generateMetadata(): Promise<Metadata> {
+  return rideConnectPageMetadata(
+    "/privacy",
+    `Privacy Policy | ${BRAND_NAME}`,
     "How RideConnect UK collects, uses and protects personal data for passengers, drivers and website bookings under UK GDPR.",
-  alternates: { canonical: `${SITE_URL}/privacy` },
-};
+  );
+}
 
 const LAST_UPDATED = "31 May 2026";
 

@@ -7,7 +7,7 @@ type Props = {
 };
 
 export function WhatsAppButton({
-  message = "Hi, I'd like to book a taxi with RideConnectUk.",
+  message = "Hi, I'd like to book a taxi with RideConnect UK.",
   desktopOnly = true,
 }: Props) {
   return (

@@ -1,11 +1,16 @@
+import type { RideConnectSiteConfig } from "@/lib/rideconnect/sites";
 import { localBusinessJsonLd } from "@/lib/seo";
 
-export function LocalBusinessSchema() {
+type Props = {
+  site?: RideConnectSiteConfig;
+};
+
+export function LocalBusinessSchema({ site }: Props) {
   return (
     <script
       type="application/ld+json"
       dangerouslySetInnerHTML={{
-        __html: JSON.stringify(localBusinessJsonLd()),
+        __html: JSON.stringify(localBusinessJsonLd(site)),
       }}
     />
   );
