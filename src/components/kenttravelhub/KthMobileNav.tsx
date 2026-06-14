@@ -86,9 +86,9 @@ export function KthMobileNav({ links, bookHref }: Props) {
               <Link
                 href={bookHref}
                 onClick={() => setOpen(false)}
-                className="block text-center text-xs font-semibold text-kth-muted hover:text-kth-sea"
+                className="block rounded-md bg-kth-gold py-3 text-center text-sm font-extrabold uppercase tracking-wide text-kth-navy transition hover:bg-kth-gold-dark"
               >
-                Airport &amp; port transfers →
+                Book Taxi
               </Link>
             </div>
           </nav>

@@ -159,6 +159,7 @@ export function trackKthTaxiBookingClick(params: {
   href: string;
   campaign?: string;
   content?: string;
+  linkText?: string;
 }): void {
   if (!hasKthAnalyticsConsent() || typeof window.gtag !== "function") return;
 
@@ -166,6 +167,68 @@ export function trackKthTaxiBookingClick(params: {
     link_url: params.href,
     utm_campaign: params.campaign,
     utm_content: params.content,
+  });
+  window.gtag("event", "book_taxi_click", {
+    link_url: params.href,
+    link_text: params.linkText,
+    utm_campaign: params.campaign,
+    utm_content: params.content,
+    utm_source: "kenttravelhub",
+    page_path: window.location.pathname,
+  });
+}
+
+export function trackKthPhoneClick(params?: { phone?: string }): void {
+  if (!hasKthAnalyticsConsent() || typeof window.gtag !== "function") return;
+
+  window.gtag("event", "phone_click", {
+    phone_number: params?.phone,
+    page_path: window.location.pathname,
+    site: "kenttravelhub",
+  });
+}
+
+export function trackKthWhatsAppClick(): void {
+  if (!hasKthAnalyticsConsent() || typeof window.gtag !== "function") return;
+
+  window.gtag("event", "whatsapp_click", {
+    page_path: window.location.pathname,
+    site: "kenttravelhub",
+  });
+}
+
+export function trackKthBookingLead(params?: {
+  estimatedFare?: number | null;
+  returnTrip?: boolean;
+  paymentMethod?: string;
+}): void {
+  if (!hasKthAnalyticsConsent() || typeof window.gtag !== "function") return;
+
+  const payload = {
+    currency: "GBP",
+    value: params?.estimatedFare ?? undefined,
+    return_trip: params?.returnTrip ?? false,
+    lead_type: "booking_form",
+    payment_method: params?.paymentMethod ?? "cash",
+    site: "kenttravelhub",
+  };
+
+  window.gtag("event", "generate_lead", payload);
+  window.gtag("event", "booking_form_submit", payload);
+}
+
+export function trackKthBeginCheckout(params?: {
+  estimatedFare?: number | null;
+  returnTrip?: boolean;
+}): void {
+  if (!hasKthAnalyticsConsent() || typeof window.gtag !== "function") return;
+
+  window.gtag("event", "begin_checkout", {
+    currency: "GBP",
+    value: params?.estimatedFare ?? undefined,
+    return_trip: params?.returnTrip ?? false,
+    payment_method: "card",
+    site: "kenttravelhub",
   });
 }
 

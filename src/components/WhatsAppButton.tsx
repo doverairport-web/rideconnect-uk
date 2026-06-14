@@ -1,13 +1,22 @@
 import { whatsappHref } from "@/lib/contact";
 
-export function WhatsAppButton() {
+type Props = {
+  message?: string;
+  /** Hide floating button on mobile when the sticky conversion bar includes WhatsApp. */
+  desktopOnly?: boolean;
+};
+
+export function WhatsAppButton({
+  message = "Hi, I'd like to book a taxi with RideConnectUk.",
+  desktopOnly = true,
+}: Props) {
   return (
     <a
-      href={whatsappHref("Hi, I'd like to book a taxi with RideConnectUk.")}
+      href={whatsappHref(message)}
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Chat on WhatsApp"
-      className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg transition hover:scale-105 hover:shadow-xl"
+      className={`fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg transition hover:scale-105 hover:shadow-xl ${desktopOnly ? "hidden md:flex" : ""}`}
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"

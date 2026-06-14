@@ -8,7 +8,11 @@ import {
 } from "@/components/BookingMaps";
 import { BookingTripPanel } from "@/components/BookingTripPanel";
 import { BRAND_NAME } from "@/lib/brand";
-import { trackBookingLead } from "@/lib/analytics-client";
+import { trackBeginCheckout, trackBookingLead } from "@/lib/analytics-client";
+import {
+  trackKthBeginCheckout,
+  trackKthBookingLead,
+} from "@/lib/kenttravelhub/analytics-client";
 import { requiresOnlineCardPayment } from "@/lib/booking-payment";
 import { formatMeterFare } from "@/lib/meter";
 import type { PaymentMethod } from "@/lib/booking-options";
@@ -29,6 +33,40 @@ type FarePreview = {
 
 const inputClass =
   "mt-1 w-full rounded-lg border border-navy/15 bg-white px-3 py-2.5 text-navy shadow-sm outline-none ring-gold/30 placeholder:text-muted/60 focus:border-gold focus:ring-2";
+
+function isKthSite(): boolean {
+  return typeof document !== "undefined" && document.body.dataset.kthSite === "true";
+}
+
+function reportBookingLead(params: {
+  estimatedFare?: number | null;
+  returnTrip?: boolean;
+  paymentMethod?: string;
+  source?: string;
+}) {
+  if (isKthSite()) {
+    trackKthBookingLead(params);
+  } else {
+    trackBookingLead(params);
+  }
+}
+
+function reportBeginCheckout(params: {
+  estimatedFare?: number | null;
+  returnTrip?: boolean;
+}) {
+  if (isKthSite()) {
+    trackKthBeginCheckout(params);
+  } else {
+    trackBeginCheckout(params);
+  }
+}
+
+function bookingSourceFromUrl(): string | undefined {
+  if (typeof window === "undefined") return undefined;
+  const params = new URLSearchParams(window.location.search);
+  return params.get("utm_source") ?? params.get("utm_campaign") ?? undefined;
+}
 
 function BookingFormInner() {
   const [state, setState] = useState<FormState>("idle");
@@ -286,15 +324,21 @@ function BookingFormInner() {
       }
 
       if (payByCard && result.checkout_url) {
+        reportBeginCheckout({
+          estimatedFare: farePreview?.fareAmount ?? null,
+          returnTrip,
+        });
         window.location.href = result.checkout_url as string;
         return;
       }
 
       setNeedsReview(Boolean(result.needs_review));
       setConfirmationEmailSent(Boolean(result.email_sent));
-      trackBookingLead({
+      reportBookingLead({
         estimatedFare: result.estimated_fare ?? farePreview?.fareAmount ?? null,
         returnTrip,
+        paymentMethod: paymentMethod,
+        source: bookingSourceFromUrl(),
       });
       setState("success");
       setPickup("");

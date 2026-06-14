@@ -7,10 +7,19 @@ import {
   readKthConsent,
   setKthConsentDefaults,
   trackKthPageView,
+  trackKthPhoneClick,
   trackKthSectionVisit,
   trackKthTaxiBookingClick,
+  trackKthWhatsAppClick,
 } from "@/lib/kenttravelhub/analytics-client";
 import { kthSectionFromPathname } from "@/lib/kenttravelhub/analytics";
+import {
+  isBookLink,
+  isPhoneLink,
+  isWhatsAppLink,
+  parseBookLinkParams,
+  phoneFromTelHref,
+} from "@/lib/conversion-tracking";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Suspense, useEffect } from "react";
 
@@ -18,15 +27,6 @@ type Props = {
   gaId?: string;
   clarityId?: string;
 };
-
-function isBookLink(href: string): boolean {
-  try {
-    const url = new URL(href, window.location.origin);
-    return url.pathname === "/book" || url.pathname.endsWith("/book");
-  } catch {
-    return href.includes("/book");
-  }
-}
 
 function AnalyticsInner({ gaId, clarityId }: Props) {
   const pathname = usePathname();
@@ -80,18 +80,29 @@ function AnalyticsInner({ gaId, clarityId }: Props) {
       if (!link) return;
 
       const href = link.getAttribute("href");
-      if (!href || !isBookLink(href)) return;
+      if (!href) return;
 
-      try {
-        const url = new URL(href, window.location.origin);
-        trackKthTaxiBookingClick({
-          href,
-          campaign: url.searchParams.get("utm_campaign") ?? undefined,
-          content: url.searchParams.get("utm_content") ?? undefined,
-        });
-      } catch {
-        trackKthTaxiBookingClick({ href });
+      const linkText = link.textContent?.trim().slice(0, 80) || undefined;
+
+      if (isPhoneLink(href)) {
+        trackKthPhoneClick({ phone: phoneFromTelHref(href) });
+        return;
       }
+
+      if (isWhatsAppLink(href)) {
+        trackKthWhatsAppClick();
+        return;
+      }
+
+      if (!isBookLink(href)) return;
+
+      const params = parseBookLinkParams(href);
+      trackKthTaxiBookingClick({
+        href,
+        campaign: params.utm_campaign,
+        content: params.utm_content,
+        linkText,
+      });
     }
 
     document.addEventListener("click", handleClick, true);

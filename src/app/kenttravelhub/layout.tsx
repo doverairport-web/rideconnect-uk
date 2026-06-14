@@ -1,5 +1,7 @@
 import { KthFooter } from "@/components/kenttravelhub/KthFooter";
 import { KthHeader } from "@/components/kenttravelhub/KthHeader";
+import { KthMobileConversionBar } from "@/components/kenttravelhub/KthMobileConversionBar";
+import { KthWhatsAppButton } from "@/components/kenttravelhub/KthWhatsAppButton";
 import { KthAdSenseAuto } from "@/components/kenttravelhub/KthAdSenseScript";
 import { KthAnalyticsLoader } from "@/components/kenttravelhub/KthAnalyticsLoader";
 import { KthWebSiteSchema } from "@/components/kenttravelhub/KthWebSiteSchema";
@@ -38,13 +40,15 @@ export default function KentTravelHubLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="kenttravelhub min-h-screen bg-white font-sans text-kth-navy antialiased">
+    <div className="kenttravelhub min-h-screen bg-white pb-[4.5rem] font-sans text-kth-navy antialiased md:pb-0">
       <KthWebSiteSchema />
       <KthAdSenseAuto />
       <KthAnalyticsLoader />
       <KthHeader />
       <main>{children}</main>
       <KthFooter />
+      <KthWhatsAppButton />
+      <KthMobileConversionBar />
     </div>
   );
 }

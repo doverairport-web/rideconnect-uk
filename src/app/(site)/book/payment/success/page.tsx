@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BRAND_NAME } from "@/lib/brand";
+import { PaymentSuccessTracking } from "@/components/PaymentSuccessTracking";
 
 export const metadata = {
   title: "Payment received",
@@ -13,6 +14,7 @@ export default function PaymentSuccessPage({
 }) {
   return (
     <main className="mx-auto max-w-lg px-4 py-16 text-center">
+      <PaymentSuccessTracking />
       <div className="rounded-2xl border border-green-200 bg-green-50 p-8">
         <p className="text-xl font-semibold text-navy">Payment received</p>
         <p className="mt-3 text-muted">
