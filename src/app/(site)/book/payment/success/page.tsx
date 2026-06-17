@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BRAND_NAME } from "@/lib/brand";
+import { PaymentFulfillmentVerify } from "@/components/PaymentFulfillmentVerify";
 import { PaymentSuccessTracking } from "@/components/PaymentSuccessTracking";
 
 export const metadata = {
@@ -7,11 +8,14 @@ export const metadata = {
   robots: { index: false },
 };
 
-export default function PaymentSuccessPage({
+export default async function PaymentSuccessPage({
   searchParams,
 }: {
-  searchParams: Promise<{ session_id?: string }>;
+  searchParams: Promise<{ session_id?: string; transactionId?: string; transaction_id?: string }>;
 }) {
+  const params = await searchParams;
+  const paymentId = params.transactionId ?? params.transaction_id ?? params.session_id ?? null;
+
   return (
     <main className="mx-auto max-w-lg px-4 py-16 text-center">
       <PaymentSuccessTracking />
@@ -21,11 +25,14 @@ export default function PaymentSuccessPage({
           Thank you. Your card payment was successful and your booking is being sent to our
           dispatch team.
         </p>
+        <PaymentFulfillmentVerify paymentId={paymentId} />
         <p className="mt-2 text-sm text-muted">
           {BRAND_NAME} will confirm your pickup time shortly. A driver is assigned after dispatch
           accepts the job.
         </p>
-        <PaymentReference searchParams={searchParams} />
+        {paymentId ? (
+          <p className="mt-4 text-xs text-muted">Reference: {paymentId.slice(0, 20)}…</p>
+        ) : null}
         <Link
           href="/book"
           className="mt-8 inline-block rounded-full bg-navy px-6 py-2.5 text-sm font-medium text-white hover:bg-navy-light"
@@ -34,19 +41,5 @@ export default function PaymentSuccessPage({
         </Link>
       </div>
     </main>
-  );
-}
-
-async function PaymentReference({
-  searchParams,
-}: {
-  searchParams: Promise<{ session_id?: string }>;
-}) {
-  const params = await searchParams;
-  if (!params.session_id) return null;
-  return (
-    <p className="mt-4 text-xs text-muted">
-      Reference: {params.session_id.slice(0, 20)}…
-    </p>
   );
 }

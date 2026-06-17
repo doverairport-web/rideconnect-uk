@@ -38,25 +38,17 @@ export async function POST(request: Request) {
       );
     }
 
-    const clientFare = Number(body.estimated_fare);
-    let estimatedFare = Number.isFinite(clientFare) && clientFare > 0 ? clientFare : null;
+    const fareResult = await buildFareEstimate({
+      pickup: booking.pickup,
+      destination: booking.destination,
+      pickup_date: booking.pickup_date,
+      pickup_time: booking.pickup_time,
+      passengers: booking.passengers,
+      luggageArticles: (booking.luggage_small ?? 0) + (booking.luggage_large ?? 0),
+      luggage: booking.luggage,
+    });
 
-    if (estimatedFare == null) {
-      const fareResult = await buildFareEstimate({
-        pickup: booking.pickup,
-        destination: booking.destination,
-        pickup_date: booking.pickup_date,
-        pickup_time: booking.pickup_time,
-        passengers: booking.passengers,
-        luggageArticles: (booking.luggage_small ?? 0) + (booking.luggage_large ?? 0),
-        luggage: booking.luggage,
-      });
-      if (fareResult.ok) {
-        estimatedFare = fareResult.fare;
-      }
-    }
-
-    if (estimatedFare == null || estimatedFare <= 0) {
+    if (!fareResult.ok || fareResult.fare <= 0) {
       return NextResponse.json(
         {
           ok: false,
@@ -64,6 +56,23 @@ export async function POST(request: Request) {
             "Pick addresses from the list so we can calculate the fare before card payment.",
         },
         { status: 400 },
+      );
+    }
+
+    const estimatedFare = fareResult.fare;
+    const clientFare = Number(body.estimated_fare);
+    if (
+      Number.isFinite(clientFare) &&
+      clientFare > 0 &&
+      Math.abs(clientFare - estimatedFare) > 0.01
+    ) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "Fare has changed. Please refresh the estimate and try again.",
+          server_fare: estimatedFare,
+        },
+        { status: 409 },
       );
     }
 
