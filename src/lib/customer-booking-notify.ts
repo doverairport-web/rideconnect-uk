@@ -150,9 +150,9 @@ export async function sendCustomerBookingConfirmation(
 
   if (result.skipped) {
     return {
-      sent: false,
+      sent: result.sent,
       skipped: true,
-      error: result.error ?? "Confirmation email already sent for this booking.",
+      error: result.sent ? undefined : result.error,
     };
   }
 

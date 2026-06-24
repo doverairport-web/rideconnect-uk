@@ -1,23 +1,32 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const memoryStore = { sends: {} as Record<string, string> };
+const memoryEntries = new Map<string, string>();
 
 vi.mock("@vercel/blob", () => ({
-  list: vi.fn(async () => ({ blobs: [{ url: "https://blob.test/log.json" }] })),
-  put: vi.fn(async (_path: string, body: string) => {
-    Object.assign(memoryStore, JSON.parse(body) as typeof memoryStore);
+  list: vi.fn(async ({ prefix }: { prefix: string }) => ({
+    blobs: memoryEntries.has(prefix)
+      ? [{ url: `https://blob.test/${prefix}` }]
+      : [],
+  })),
+  put: vi.fn(async (path: string, body: string) => {
+    memoryEntries.set(path, body);
+  }),
+  del: vi.fn(async (path: string) => {
+    memoryEntries.delete(path);
   }),
 }));
 
 describe("withBookingEmailIdempotency", () => {
   beforeEach(() => {
-    memoryStore.sends = {};
+    memoryEntries.clear();
     process.env.BLOB_READ_WRITE_TOKEN = "test-token";
     vi.stubGlobal(
       "fetch",
       vi.fn(async (url: RequestInfo) => {
-        if (String(url).includes("blob.test")) {
-          return new Response(JSON.stringify(memoryStore));
+        const path = String(url).replace("https://blob.test/", "").split("?")[0];
+        const value = memoryEntries.get(path);
+        if (value != null) {
+          return new Response(value);
         }
         throw new Error(`unexpected fetch ${String(url)}`);
       }),
@@ -42,6 +51,7 @@ describe("withBookingEmailIdempotency", () => {
     );
 
     expect(first.sent).toBe(true);
+    expect(second.sent).toBe(true);
     expect(second.skipped).toBe(true);
     expect(sendCount).toBe(1);
   });

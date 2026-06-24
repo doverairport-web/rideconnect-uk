@@ -1,10 +1,12 @@
 import { randomUUID } from "crypto";
-import { list, put } from "@vercel/blob";
+import { del, list, put } from "@vercel/blob";
 
-const BLOB_PATH = "rideconnect/booking-email-send-log.json";
+/** Per-key blobs avoid lost updates when dispatch + customer emails claim concurrently. */
+const BLOB_PREFIX = "rideconnect/booking-email-keys";
 export const PENDING_TTL_MS = 5 * 60 * 1000;
 export const SENT_TTL_MS = 90 * 24 * 60 * 60 * 1000;
-const MAX_ENTRIES = 8000;
+const CLAIM_VERIFY_ATTEMPTS = 8;
+const IN_PROGRESS_WAIT_MS = 12_000;
 
 export type BookingEmailType = "customer_confirmation" | "dispatch_notification";
 
@@ -46,7 +48,8 @@ function sleep(ms: number): Promise<void> {
 
 function entryTimestamp(raw: string | undefined): number {
   if (!raw || raw === "sent") return NaN;
-  const at = Number(raw.split(":")[0]);
+  const body = raw.startsWith("failed:") ? raw.slice("failed:".length) : raw;
+  const at = Number(body.split(":")[0]);
   return Number.isFinite(at) ? at : NaN;
 }
 
@@ -56,6 +59,7 @@ export function isPendingEntry(raw: string | undefined, now = Date.now()): boole
   return Number.isFinite(at) && now - at < PENDING_TTL_MS;
 }
 
+/** @deprecated Legacy JSON store — kept for unit tests only. */
 export function pruneSendLogStore(store: SendLogStore, now = Date.now()): void {
   for (const [key, raw] of Object.entries(store.sends)) {
     if (raw === "sent") continue;
@@ -71,44 +75,47 @@ export function pruneSendLogStore(store: SendLogStore, now = Date.now()): void {
       delete store.sends[key];
     }
   }
-
-  const keys = Object.keys(store.sends);
-  if (keys.length <= MAX_ENTRIES) return;
-
-  keys
-    .sort((a, b) => entryTimestamp(store.sends[a]) - entryTimestamp(store.sends[b]))
-    .slice(0, keys.length - MAX_ENTRIES)
-    .forEach((key) => delete store.sends[key]);
 }
 
-async function loadSendLogStore(): Promise<SendLogStore> {
-  if (!isBookingEmailSendLogConfigured()) return { sends: {} };
+function blobPathForLogKey(logKey: string): string {
+  const safe = logKey.trim().replace(/:/g, "--").replace(/\//g, "_");
+  return `${BLOB_PREFIX}/${encodeURIComponent(safe)}.txt`;
+}
+
+async function readLogEntry(logKey: string): Promise<string | undefined> {
+  if (!isBookingEmailSendLogConfigured()) return undefined;
 
   try {
-    const { blobs } = await list({ prefix: BLOB_PATH, limit: 1 });
+    const path = blobPathForLogKey(logKey);
+    const { blobs } = await list({ prefix: path, limit: 1 });
     const blob = blobs[0];
-    if (!blob?.url) return { sends: {} };
+    if (!blob?.url) return undefined;
 
     const response = await fetch(`${blob.url}?t=${Date.now()}`, { cache: "no-store" });
-    if (!response.ok) return { sends: {} };
+    if (!response.ok) return undefined;
 
-    const parsed = JSON.parse(await response.text()) as SendLogStore;
-    if (!parsed?.sends || typeof parsed.sends !== "object") return { sends: {} };
-    return parsed;
+    const text = (await response.text()).trim();
+    return text || undefined;
   } catch {
-    return { sends: {} };
+    return undefined;
   }
 }
 
-async function saveSendLogStore(store: SendLogStore): Promise<void> {
-  if (!isBookingEmailSendLogConfigured()) return;
-
-  await put(BLOB_PATH, JSON.stringify(store), {
+async function writeLogEntry(logKey: string, value: string): Promise<void> {
+  await put(blobPathForLogKey(logKey), value, {
     access: "public",
     addRandomSuffix: false,
     allowOverwrite: true,
-    contentType: "application/json",
+    contentType: "text/plain",
   });
+}
+
+async function deleteLogEntry(logKey: string): Promise<void> {
+  try {
+    await del(blobPathForLogKey(logKey));
+  } catch {
+    /* ignore */
+  }
 }
 
 export type EmailSendClaimResult =
@@ -129,23 +136,19 @@ export async function claimBookingEmailSend(
 
   const token = `${Date.now()}:${randomUUID()}`;
 
-  for (let attempt = 0; attempt < 16; attempt++) {
-    const store = await loadSendLogStore();
-    pruneSendLogStore(store);
-
-    const existing = store.sends[key];
+  for (let attempt = 0; attempt < CLAIM_VERIFY_ATTEMPTS; attempt++) {
+    const existing = await readLogEntry(key);
     if (existing === "sent") return { action: "already_sent" };
     if (isPendingEntry(existing)) return { action: "in_progress" };
 
-    store.sends[key] = token;
     try {
-      await saveSendLogStore(store);
-      const verify = await loadSendLogStore();
-      if (verify.sends[key] === token) return { action: "proceed", token };
+      await writeLogEntry(key, token);
+      const verify = await readLogEntry(key);
+      if (verify === token) return { action: "proceed", token };
     } catch {
       /* retry */
     }
-    await sleep(40 + attempt * 60);
+    await sleep(40 + attempt * 80);
   }
 
   return { action: "in_progress" };
@@ -159,20 +162,19 @@ export async function markBookingEmailSendSuccess(
   if (!key || token === "anonymous" || token === "unconfigured") return;
   if (!isBookingEmailSendLogConfigured()) return;
 
-  for (let attempt = 0; attempt < 8; attempt++) {
-    const store = await loadSendLogStore();
-    pruneSendLogStore(store);
-    const existing = store.sends[key];
+  for (let attempt = 0; attempt < CLAIM_VERIFY_ATTEMPTS; attempt++) {
+    const existing = await readLogEntry(key);
     if (existing === "sent") return;
     if (existing && existing !== token) return;
 
-    store.sends[key] = "sent";
     try {
-      await saveSendLogStore(store);
-      return;
+      await writeLogEntry(key, "sent");
+      const verify = await readLogEntry(key);
+      if (verify === "sent") return;
     } catch {
-      await sleep(40 + attempt * 60);
+      /* retry */
     }
+    await sleep(40 + attempt * 80);
   }
 }
 
@@ -184,20 +186,29 @@ export async function releaseBookingEmailSendClaim(
   if (!key || token === "anonymous" || token === "unconfigured") return;
   if (!isBookingEmailSendLogConfigured()) return;
 
-  for (let attempt = 0; attempt < 8; attempt++) {
-    const store = await loadSendLogStore();
-    const existing = store.sends[key];
+  for (let attempt = 0; attempt < CLAIM_VERIFY_ATTEMPTS; attempt++) {
+    const existing = await readLogEntry(key);
     if (existing === "sent") return;
     if (existing !== token) return;
 
-    delete store.sends[key];
     try {
-      await saveSendLogStore(store);
+      await deleteLogEntry(key);
       return;
     } catch {
-      await sleep(40 + attempt * 60);
+      await sleep(40 + attempt * 80);
     }
   }
+}
+
+async function waitForPeerEmailSend(logKey: string): Promise<"sent" | "timeout"> {
+  const started = Date.now();
+  while (Date.now() - started < IN_PROGRESS_WAIT_MS) {
+    const existing = await readLogEntry(logKey);
+    if (existing === "sent") return "sent";
+    if (!isPendingEntry(existing)) return "timeout";
+    await sleep(400);
+  }
+  return "timeout";
 }
 
 export async function withBookingEmailIdempotency(
@@ -222,24 +233,47 @@ export async function withBookingEmailIdempotency(
     fallbackKey: params.fallbackKey ?? null,
   });
 
-  const claim = await claimBookingEmailSend(logKey);
+  let claim = await claimBookingEmailSend(logKey);
+
   if (claim.action === "already_sent") {
     logEmailSendEvent("email_send_skipped_duplicate", {
       bookingId: params.bookingId ?? null,
       emailType: params.emailType,
       logKey: logKey || null,
+      reason: "already_sent",
     });
-    return { sent: false, skipped: true };
+    return { sent: true, skipped: true };
   }
 
   if (claim.action === "in_progress") {
-    logEmailSendEvent("email_send_skipped_duplicate", {
-      bookingId: params.bookingId ?? null,
-      emailType: params.emailType,
-      logKey: logKey || null,
-      reason: "in_progress",
-    });
-    return { sent: false, skipped: true, error: "Email send already in progress." };
+    const peer = await waitForPeerEmailSend(logKey);
+    if (peer === "sent") {
+      logEmailSendEvent("email_send_skipped_duplicate", {
+        bookingId: params.bookingId ?? null,
+        emailType: params.emailType,
+        logKey: logKey || null,
+        reason: "peer_completed",
+      });
+      return { sent: true, skipped: true };
+    }
+
+    claim = await claimBookingEmailSend(logKey);
+    if (claim.action === "already_sent") {
+      return { sent: true, skipped: true };
+    }
+    if (claim.action === "in_progress") {
+      logEmailSendEvent("email_send_skipped_duplicate", {
+        bookingId: params.bookingId ?? null,
+        emailType: params.emailType,
+        logKey: logKey || null,
+        reason: "in_progress",
+      });
+      return {
+        sent: false,
+        skipped: true,
+        error: "Email send already in progress.",
+      };
+    }
   }
 
   try {
