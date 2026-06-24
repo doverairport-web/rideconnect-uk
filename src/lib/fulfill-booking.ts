@@ -7,12 +7,13 @@ import {
   type WebBookingInput,
 } from "@/lib/booking";
 import { saveBookingViaDispatch } from "@/lib/dispatch-save";
+import type { BookingSourceMeta } from "@/lib/booking-source";
 import { buildFareEstimate } from "@/lib/fare-estimate";
 import {
   canSendBookingEmail,
-  sendBookingEmails,
   sendDispatchNotification,
 } from "@/lib/notify";
+import { sendCustomerBookingConfirmation } from "@/lib/customer-booking-notify";
 import { dispatchPassengerFulfillUrl, dispatchPaymentSecret } from "@/lib/payment-proxy";
 
 export type CardPaymentInfo = {
@@ -48,6 +49,8 @@ export async function fulfillWebBooking(
   options?: {
     estimatedFare?: number | null;
     cardPayment?: CardPaymentInfo;
+    source?: BookingSourceMeta;
+    serviceType?: "standard" | "airport_transfer" | "cruise_transfer";
   },
 ): Promise<FulfillBookingResult> {
   const errors: string[] = [];
@@ -102,8 +105,8 @@ export async function fulfillWebBooking(
     }
   }
 
-  let cardHandledByDispatch = false;
   let customerEmailFromDispatch = false;
+  let dispatchNotifiedByApi = false;
 
   if (!bookingSaved) {
     try {
@@ -125,6 +128,7 @@ export async function fulfillWebBooking(
           ok?: boolean;
           record_id?: string;
           customer_email_sent?: boolean;
+          dispatch_email_sent?: boolean;
           error?: string;
         };
         if (!fulfillResponse.ok || !fulfillData.ok || !fulfillData.record_id) {
@@ -132,21 +136,26 @@ export async function fulfillWebBooking(
         }
         recordId = fulfillData.record_id;
         bookingSaved = true;
-        cardHandledByDispatch = true;
         customerEmailFromDispatch = fulfillData.customer_email_sent === true;
+        dispatchNotifiedByApi = fulfillData.dispatch_email_sent === true;
         emailSent = customerEmailFromDispatch;
       } else {
         const saved = await saveBookingViaDispatch(bookingWithPayment, estimatedFare, {
           squarePaymentId: options?.cardPayment?.sessionId,
+          source: options?.source,
+          serviceType: options?.serviceType,
         });
         recordId = saved.recordId;
         bookingSaved = Boolean(saved.recordId);
+        dispatchNotifiedByApi = saved.dispatchEmailSent === true;
+        customerEmailFromDispatch = saved.customerEmailSent === true;
+        emailSent = customerEmailFromDispatch;
         if (bookingSaved && !saved.created) {
           return {
             ok: true,
             recordId,
             emailSent: false,
-            dispatchNotified: false,
+            dispatchNotified: dispatchNotifiedByApi,
             bookingSaved: true,
             needsReview: shouldReviewWebBooking(booking),
             estimatedFare,
@@ -173,28 +182,35 @@ export async function fulfillWebBooking(
     }
   }
 
-  if (bookingSaved && canSendBookingEmail()) {
+  if (bookingSaved && canSendBookingEmail() && recordId) {
     const paymentId = options?.cardPayment?.sessionId?.trim();
     const shouldSend =
-      !paymentId ||
-      !recordId ||
-      (await isPrimarySquarePaymentBooking(paymentId, recordId));
+      !paymentId || (await isPrimarySquarePaymentBooking(paymentId, recordId));
 
     if (shouldSend) {
       try {
-        if (cardHandledByDispatch) {
+        if (!dispatchNotifiedByApi) {
           const adminResult = await sendDispatchNotification(
             bookingWithPayment,
             estimatedFare,
+            { bookingId: recordId, fallbackKey: paymentId },
           );
           dispatchNotified = adminResult.dispatchSent;
           errors.push(...adminResult.errors);
-          emailSent = customerEmailFromDispatch;
         } else {
-          const emailResult = await sendBookingEmails(bookingWithPayment, estimatedFare);
-          dispatchNotified = emailResult.dispatchSent;
-          emailSent = emailResult.customerSent;
-          errors.push(...emailResult.errors);
+          dispatchNotified = true;
+        }
+
+        if (!customerEmailFromDispatch && bookingWithPayment.email) {
+          const customerResult = await sendCustomerBookingConfirmation(
+            bookingWithPayment,
+            estimatedFare,
+            { bookingId: recordId, squarePaymentId: paymentId },
+          );
+          if (customerResult.sent) emailSent = true;
+          if (customerResult.error && !customerResult.skipped) {
+            errors.push(`Customer confirmation: ${customerResult.error}`);
+          }
         }
       } catch (error) {
         errors.push(

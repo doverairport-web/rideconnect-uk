@@ -6,6 +6,7 @@ type SendBody = {
   booking?: WebBookingInput;
   estimated_fare?: number | null;
   square_payment_id?: string;
+  booking_id?: string;
 };
 
 export async function POST(request: Request) {
@@ -24,7 +25,10 @@ export async function POST(request: Request) {
     const result = await sendCustomerBookingConfirmation(
       booking,
       body.estimated_fare ?? null,
-      { squarePaymentId: body.square_payment_id },
+      {
+        squarePaymentId: body.square_payment_id,
+        bookingId: body.booking_id,
+      },
     );
     return NextResponse.json({
       ok: true,

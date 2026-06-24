@@ -1,20 +1,29 @@
 import type { WebBookingInput } from "@/lib/booking";
-import { siteHost } from "@/lib/brand";
+import type { BookingSourceMeta } from "@/lib/booking-source";
 
 const DISPATCH_BOOKING_URL =
   process.env.DISPATCH_BOOKING_URL?.trim() ||
-  "https://dispatch.rideconnectuk.com/api/public/bookings";
+  "https://dispatch.rideconnectuk.com/api/bookings/create";
 
-/** Save booking through dispatch API (uses dispatch Airtable credentials). */
+/** Save booking through the central dispatch API (Airtable + notifications). */
 export async function saveBookingViaDispatch(
   booking: WebBookingInput,
   estimatedFare?: number | null,
-  options?: { squarePaymentId?: string },
-): Promise<{ recordId?: string; created: boolean }> {
+  options?: {
+    squarePaymentId?: string;
+    source?: BookingSourceMeta;
+    serviceType?: "standard" | "airport_transfer" | "cruise_transfer";
+  },
+): Promise<{
+  recordId?: string;
+  created: boolean;
+  dispatchEmailSent?: boolean;
+  customerEmailSent?: boolean;
+}> {
+  const source = options?.source;
   const notes = [
     booking.notes?.trim(),
     booking.payment_method ? `Payment: ${booking.payment_method}` : null,
-    `Source: ${siteHost()}`,
   ]
     .filter(Boolean)
     .join("\n");
@@ -39,6 +48,9 @@ export async function saveBookingViaDispatch(
       return_mode: booking.return_mode,
       fare: estimatedFare != null && estimatedFare > 0 ? estimatedFare : undefined,
       notes,
+      service_type: options?.serviceType,
+      source_domain: source?.sourceDomain,
+      source_app: source?.sourceApp,
       square_payment_id: options?.squarePaymentId?.trim() || undefined,
     }),
   });
@@ -47,15 +59,31 @@ export async function saveBookingViaDispatch(
     ok?: boolean;
     error?: string;
     record_id?: string;
+    booking_id?: string;
     created?: boolean;
+    dispatch_email_sent?: boolean;
+    customer_email_sent?: boolean;
   };
 
   if (!response.ok || !data.ok) {
     throw new Error(data.error || "Could not save booking to dispatch.");
   }
 
+  const recordId = data.record_id ?? data.booking_id;
+  if (recordId) {
+    console.info(`Booking saved successfully: ${recordId}`);
+    if (data.dispatch_email_sent) {
+      console.info(`Internal email sent successfully: ${recordId}`);
+    }
+    if (data.customer_email_sent) {
+      console.info(`Customer email sent successfully: ${recordId}`);
+    }
+  }
+
   return {
-    recordId: data.record_id,
+    recordId,
     created: data.created !== false,
+    dispatchEmailSent: data.dispatch_email_sent === true,
+    customerEmailSent: data.customer_email_sent === true,
   };
 }

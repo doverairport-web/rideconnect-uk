@@ -4,6 +4,7 @@ import {
   isCustomerEmail,
 } from "@/lib/booking-emails";
 import type { WebBookingInput } from "@/lib/booking";
+import { withBookingEmailIdempotency } from "@/lib/booking-email-send-log";
 import {
   dispatchPaymentSecret,
   dispatchSquareClaimUrl,
@@ -84,31 +85,40 @@ async function sendPlainEmail(options: {
   throw new Error("Email is not configured.");
 }
 
+async function legacySquarePaymentEmailClaim(paymentId: string): Promise<boolean> {
+  const secret = dispatchPaymentSecret();
+  if (!secret) return true;
+
+  const claimResponse = await fetch(dispatchSquareClaimUrl(), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${secret}`,
+    },
+    body: JSON.stringify({ payment_id: paymentId, kind: "email" }),
+  });
+  const claimData = (await claimResponse.json()) as { proceed?: boolean };
+  return claimResponse.ok && claimData.proceed === true;
+}
+
 export async function sendCustomerBookingConfirmation(
   booking: WebBookingInput,
   estimatedFare?: number | null,
-  options?: { squarePaymentId?: string },
-): Promise<{ sent: boolean; error?: string }> {
+  options?: { squarePaymentId?: string; bookingId?: string },
+): Promise<{ sent: boolean; skipped?: boolean; error?: string }> {
   if (!isCustomerEmail(booking.email)) {
     return { sent: false, error: "No valid customer email." };
   }
 
   const paymentId = options?.squarePaymentId?.trim();
-  if (paymentId) {
-    const secret = dispatchPaymentSecret();
-    if (secret) {
-      const claimResponse = await fetch(dispatchSquareClaimUrl(), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${secret}`,
-        },
-        body: JSON.stringify({ payment_id: paymentId, kind: "email" }),
-      });
-      const claimData = (await claimResponse.json()) as { proceed?: boolean };
-      if (!claimResponse.ok || !claimData.proceed) {
-        return { sent: false, error: "Confirmation email already sent for this payment." };
-      }
+  if (paymentId && !options?.bookingId?.trim()) {
+    const claimed = await legacySquarePaymentEmailClaim(paymentId);
+    if (!claimed) {
+      return {
+        sent: false,
+        skipped: true,
+        error: "Confirmation email already sent for this payment.",
+      };
     }
   }
 
@@ -116,18 +126,32 @@ export async function sendCustomerBookingConfirmation(
     return { sent: false, error: "Email is not configured on the server." };
   }
 
-  try {
-    await sendPlainEmail({
-      to: booking.email.trim(),
-      subject: customerConfirmationSubject(booking),
-      text: customerConfirmationBody(booking, estimatedFare),
-      replyTo: dispatchEmail(),
-    });
-    return { sent: true };
-  } catch (error) {
+  const result = await withBookingEmailIdempotency(
+    {
+      bookingId: options?.bookingId,
+      emailType: "customer_confirmation",
+      fallbackKey: paymentId,
+    },
+    async () => {
+      await sendPlainEmail({
+        to: booking.email!.trim(),
+        subject: customerConfirmationSubject(booking),
+        text: customerConfirmationBody(booking, estimatedFare),
+        replyTo: dispatchEmail(),
+      });
+    },
+  );
+
+  if (result.skipped) {
     return {
       sent: false,
-      error: error instanceof Error ? error.message : "Could not send confirmation email.",
+      skipped: true,
+      error: result.error ?? "Confirmation email already sent for this booking.",
     };
   }
+
+  return {
+    sent: result.sent,
+    error: result.error,
+  };
 }

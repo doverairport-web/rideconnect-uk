@@ -1,11 +1,10 @@
 import type { WebBookingInput } from "@/lib/booking";
 import {
-  customerConfirmationBody,
-  customerConfirmationSubject,
   dispatchBookingSubject,
   dispatchNotificationBody,
   isCustomerEmail,
 } from "@/lib/booking-emails";
+import { withBookingEmailIdempotency } from "@/lib/booking-email-send-log";
 import {
   dispatchEmail,
   emailFromAddress,
@@ -188,12 +187,10 @@ function logAdminEmailFailure(
   });
 }
 
-/** Admin/dispatch alert with Resend → SMTP fallback (avoids silent info@→info@ Resend failures). */
-export async function sendDispatchNotification(
+async function deliverDispatchNotification(
   booking: WebBookingInput,
   estimatedFare?: number | null,
-): Promise<Pick<BookingEmailResult, "dispatchSent" | "errors">> {
-  const errors: string[] = [];
+): Promise<void> {
   const to = dispatchEmail();
   const subject = dispatchBookingSubject(booking);
   const text = dispatchNotificationBody(booking, estimatedFare);
@@ -205,16 +202,8 @@ export async function sendDispatchNotification(
   };
 
   if (WEB3FORMS_ACCESS_KEY && !hasSmtp() && !hasResend()) {
-    try {
-      await sendViaWeb3FormsDispatch(booking, text);
-      return { dispatchSent: true, errors };
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Could not send dispatch email.";
-      errors.push(`Admin alert (Web3Forms): ${message}`);
-      logAdminEmailFailure(booking, to, "web3forms", message);
-      return { dispatchSent: false, errors };
-    }
+    await sendViaWeb3FormsDispatch(booking, text);
+    return;
   }
 
   try {
@@ -223,40 +212,55 @@ export async function sendDispatchNotification(
     } else {
       await sendViaSmtpOnly(mail);
     }
-    return { dispatchSent: true, errors };
   } catch (primaryError) {
-    const primaryMessage =
-      primaryError instanceof Error
-        ? primaryError.message
-        : "Could not send dispatch email.";
-    errors.push(`Admin alert (primary): ${primaryMessage}`);
-    logAdminEmailFailure(booking, to, hasResend() ? "resend" : "smtp", primaryMessage);
-
     if (hasResend() && hasSmtp()) {
-      try {
-        await sendViaSmtpOnly(mail);
-        console.info("[booking-email] Admin notification sent via SMTP fallback", {
-          to,
-          customer: booking.customer_name,
-        });
-        return { dispatchSent: true, errors };
-      } catch (fallbackError) {
-        const fallbackMessage =
-          fallbackError instanceof Error
-            ? fallbackError.message
-            : "SMTP fallback failed.";
-        errors.push(`Admin alert (SMTP fallback): ${fallbackMessage}`);
-        logAdminEmailFailure(booking, to, "smtp-fallback", fallbackMessage);
-      }
+      await sendViaSmtpOnly(mail);
+      console.info("[booking-email] Admin notification sent via SMTP fallback", {
+        to,
+        customer: booking.customer_name,
+      });
+      return;
     }
+    throw primaryError;
+  }
+}
+
+/** Admin/dispatch alert with Resend → SMTP fallback (avoids silent info@→info@ Resend failures). */
+export async function sendDispatchNotification(
+  booking: WebBookingInput,
+  estimatedFare?: number | null,
+  options?: { bookingId?: string; fallbackKey?: string },
+): Promise<Pick<BookingEmailResult, "dispatchSent" | "errors">> {
+  const errors: string[] = [];
+  const to = dispatchEmail();
+
+  const idempotent = await withBookingEmailIdempotency(
+    {
+      bookingId: options?.bookingId,
+      emailType: "dispatch_notification",
+      fallbackKey: options?.fallbackKey,
+    },
+    () => deliverDispatchNotification(booking, estimatedFare),
+  );
+
+  if (idempotent.skipped) {
+    return { dispatchSent: true, errors };
   }
 
+  if (idempotent.sent) {
+    return { dispatchSent: true, errors };
+  }
+
+  const message = idempotent.error ?? "Could not send dispatch email.";
+  errors.push(`Admin alert: ${message}`);
+  logAdminEmailFailure(booking, to, "idempotent", message);
   return { dispatchSent: false, errors };
 }
 
 export async function sendBookingEmails(
   booking: WebBookingInput,
   estimatedFare?: number | null,
+  options?: { bookingId?: string; squarePaymentId?: string },
 ): Promise<BookingEmailResult> {
   if (!canSendBookingEmail()) {
     throw new Error(
@@ -265,33 +269,24 @@ export async function sendBookingEmails(
   }
 
   const errors: string[] = [];
-  let dispatchSent = false;
-  let customerSent = false;
+  const { sendCustomerBookingConfirmation } = await import("@/lib/customer-booking-notify");
 
-  const dispatchResult = await sendDispatchNotification(booking, estimatedFare);
-  dispatchSent = dispatchResult.dispatchSent;
+  const dispatchResult = await sendDispatchNotification(booking, estimatedFare, {
+    bookingId: options?.bookingId,
+    fallbackKey: options?.squarePaymentId,
+  });
+  const dispatchSent = dispatchResult.dispatchSent;
   errors.push(...dispatchResult.errors);
 
+  let customerSent = false;
   if (isCustomerEmail(booking.email)) {
-    try {
-      await sendPlainEmail({
-        to: booking.email.trim(),
-        subject: customerConfirmationSubject(booking),
-        text: customerConfirmationBody(booking, estimatedFare),
-        replyTo: dispatchEmail(),
-      });
-      customerSent = true;
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Could not send customer confirmation email.";
-      errors.push(`Customer confirmation: ${message}`);
-      console.error("[booking-email] Customer confirmation failed", {
-        to: booking.email,
-        error: message,
-        customer: booking.customer_name,
-      });
+    const customerResult = await sendCustomerBookingConfirmation(booking, estimatedFare, {
+      bookingId: options?.bookingId,
+      squarePaymentId: options?.squarePaymentId,
+    });
+    customerSent = customerResult.sent;
+    if (customerResult.error && !customerResult.skipped) {
+      errors.push(`Customer confirmation: ${customerResult.error}`);
     }
   }
 
