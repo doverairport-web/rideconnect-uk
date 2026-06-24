@@ -101,6 +101,19 @@ async function legacySquarePaymentEmailClaim(paymentId: string): Promise<boolean
   return claimResponse.ok && claimData.proceed === true;
 }
 
+/** Send customer confirmation email only — no idempotency (used by dispatch proxy after outer claim). */
+export async function deliverCustomerBookingConfirmationEmail(
+  booking: WebBookingInput,
+  estimatedFare?: number | null,
+): Promise<void> {
+  await sendPlainEmail({
+    to: booking.email!.trim(),
+    subject: customerConfirmationSubject(booking),
+    text: customerConfirmationBody(booking, estimatedFare),
+    replyTo: dispatchEmail(),
+  });
+}
+
 export async function sendCustomerBookingConfirmation(
   booking: WebBookingInput,
   estimatedFare?: number | null,
@@ -132,14 +145,7 @@ export async function sendCustomerBookingConfirmation(
       emailType: "customer_confirmation",
       fallbackKey: paymentId,
     },
-    async () => {
-      await sendPlainEmail({
-        to: booking.email!.trim(),
-        subject: customerConfirmationSubject(booking),
-        text: customerConfirmationBody(booking, estimatedFare),
-        replyTo: dispatchEmail(),
-      });
-    },
+    () => deliverCustomerBookingConfirmationEmail(booking, estimatedFare),
   );
 
   if (result.skipped) {

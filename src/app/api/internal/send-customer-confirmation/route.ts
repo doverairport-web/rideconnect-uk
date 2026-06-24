@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { WebBookingInput } from "@/lib/booking";
-import { sendCustomerBookingConfirmation } from "@/lib/customer-booking-notify";
+import { deliverCustomerBookingConfirmationEmail } from "@/lib/customer-booking-notify";
 import { verifyDispatchPaymentAuth } from "@/lib/payment-proxy";
 type SendBody = {
   booking?: WebBookingInput;
@@ -22,18 +22,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, error: "Missing booking fields." }, { status: 400 });
     }
 
-    const result = await sendCustomerBookingConfirmation(
-      booking,
-      body.estimated_fare ?? null,
-      {
-        squarePaymentId: body.square_payment_id,
-        bookingId: body.booking_id,
-      },
-    );
+    await deliverCustomerBookingConfirmationEmail(booking, body.estimated_fare ?? null);
     return NextResponse.json({
       ok: true,
-      sent: result.sent,
-      error: result.error,
+      sent: true,
+      error: null,
     });
   } catch (error) {
     return NextResponse.json(

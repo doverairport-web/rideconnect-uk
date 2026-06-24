@@ -187,7 +187,8 @@ function logAdminEmailFailure(
   });
 }
 
-async function deliverDispatchNotification(
+/** Send dispatch alert only — no idempotency (used by dispatch proxy after outer claim). */
+export async function deliverDispatchNotification(
   booking: WebBookingInput,
   estimatedFare?: number | null,
 ): Promise<void> {
