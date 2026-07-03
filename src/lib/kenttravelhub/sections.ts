@@ -1,18 +1,22 @@
 import type { LiveSeverity, LiveTravelSnapshot } from "@/lib/kenttravelhub/content";
 import { KTH_DOVER_HOTELS, KTH_DOVER_RESTAURANTS } from "@/lib/kenttravelhub/content";
 
+import { KTH_HOME_SECTION_HEADINGS } from "@/lib/kenttravelhub/home-dashboard";
+
 export const KTH_SITE_SECTIONS = [
   {
     number: 1,
     id: "cruise",
     path: "/cruise",
     label: "Cruise",
+    homeHeading: KTH_HOME_SECTION_HEADINGS.cruise,
     shortLabel: "Cruise",
     emoji: "🚢",
-    description: "Live cruise arrivals, ship schedules and terminal guides.",
+    description:
+      "Today's cruise ships in Dover — arrivals, departures, terminal and passenger pickup advice.",
     metaTitle: "Dover Cruise Arrivals Today | Ships in Port | Kent Travel Hub",
     metaDescription:
-      "Live Dover cruise ship schedule — arrivals and departures today, this week and month. CT1 & CT2 terminal times from Port of Dover data.",
+      "Live Dover cruise ship schedule — arrivals and departures today, CT1 & CT2 terminal times, taxi pickup tips and the full Port of Dover cruise calendar.",
     accent: "border-blue-500",
     panelBg: "bg-blue-600",
     homeDashboard: true,
@@ -22,12 +26,14 @@ export const KTH_SITE_SECTIONS = [
     id: "ferries",
     path: "/ferries",
     label: "Ferries",
+    homeHeading: KTH_HOME_SECTION_HEADINGS.ferries,
     shortLabel: "Ferries",
     emoji: "⛴",
-    description: "Dover–Calais & Dunkirk updates, DFDS, P&O and port waiting times.",
+    description:
+      "DFDS and P&O status, Dover–Calais and Dunkirk updates, arrivals and check-in advice.",
     metaTitle: "Dover Ferry Updates Live | Calais & Dunkirk | Kent Travel Hub",
     metaDescription:
-      "Live Dover ferry delays, DFDS and P&O status, cross-Channel arrivals from France and port waiting times at the Eastern Docks.",
+      "Live Dover ferry delays, DFDS and P&O status, cross-Channel arrivals from France, check-in times and port waiting times at the Eastern Docks.",
     accent: "border-kth-sea",
     panelBg: "bg-kth-sea",
     homeDashboard: true,
@@ -37,12 +43,14 @@ export const KTH_SITE_SECTIONS = [
     id: "airports",
     path: "/airports",
     label: "Airports",
+    homeHeading: "Airport Live Centre",
     shortLabel: "Airports",
     emoji: "✈",
-    description: "Gatwick, Heathrow, Stansted and Luton transfer guides from Dover.",
-    metaTitle: "Dover to Heathrow & Gatwick | Airport Transfers | Kent Travel Hub",
+    description:
+      "Live Heathrow, Gatwick, Stansted and Luton boards — arrivals, departures, delays and Dover travel times.",
+    metaTitle: "Airport Live Centre | Dover to Heathrow, Gatwick & London | Kent Travel Hub",
     metaDescription:
-      "Airport transfer guides from Dover port and cruise terminal — Heathrow, Gatwick, Stansted and Luton journey times, fares and routes.",
+      "Live flight boards for Heathrow, Gatwick, Stansted and Luton — arrivals, departures, delays, airport weather and Dover travel times with M20 and Operation Brock status.",
     accent: "border-violet-500",
     panelBg: "bg-violet-600",
     homeDashboard: true,
@@ -52,12 +60,14 @@ export const KTH_SITE_SECTIONS = [
     id: "live",
     path: "/live",
     label: "Live Travel",
+    homeHeading: KTH_HOME_SECTION_HEADINGS.live,
     shortLabel: "Live",
     emoji: "🚦",
-    description: "M20 traffic, Operation Brock, Dover port status and live cameras.",
+    description:
+      "Dover port waiting times, M20 traffic, Operation Brock, weather and severe alerts.",
     metaTitle: "Dover Live Travel | M20, Port Traffic & Webcams | Kent Travel Hub",
     metaDescription:
-      "Live M20 traffic to Dover, Operation Brock status, port queues, Dover weather and Kent road cameras — updated throughout the day.",
+      "Live M20 traffic to Dover, Operation Brock status, port queues, Dover weather, severe alerts and Kent road cameras — updated throughout the day.",
     accent: "border-amber-500",
     panelBg: "bg-amber-600",
     homeDashboard: true,
@@ -67,39 +77,58 @@ export const KTH_SITE_SECTIONS = [
     id: "visit",
     path: "/visit",
     label: "Visit Kent",
+    homeHeading: KTH_HOME_SECTION_HEADINGS.visit,
     shortLabel: "Visit",
     emoji: "🏰",
-    description: "White Cliffs, Dover Castle, Canterbury and the Kent coast.",
-    metaTitle: "Visit Kent from Dover | White Cliffs, Castle & Canterbury",
+    description:
+      "White Cliffs, Dover Castle, South Foreland Lighthouse and day trips near the port.",
+    metaTitle: "Visit Kent from Dover | White Cliffs, Castle & Lighthouse",
     metaDescription:
-      "Day trips from Dover port and cruise terminal — White Cliffs, Dover Castle, Canterbury Cathedral, Deal and Folkestone with official links and planning guides.",
+      "Things to do near Dover before or after cruise or ferry travel — White Cliffs, Dover Castle, South Foreland Lighthouse, Canterbury and the Kent coast.",
     accent: "border-emerald-500",
     panelBg: "bg-emerald-600",
-    homeDashboard: false,
+    homeDashboard: true,
   },
   {
     number: 6,
     id: "stay",
     path: "/stay",
     label: "Hotels & Eat",
+    homeHeading: KTH_HOME_SECTION_HEADINGS.stay,
     shortLabel: "Stay",
     emoji: "🏨",
-    description: "Hotels, B&Bs and restaurants near Dover port and across Kent.",
-    metaTitle: "Hotels & Restaurants near Dover Port | Stay in Kent",
+    description:
+      "Official cruise-passenger hotels near CT1 and CT2 — distances, taxi times, parking and direct booking links.",
+    metaTitle: "Cruise Hotels near Dover CT1 & CT2 | Kent Travel Hub",
     metaDescription:
-      "Hotels, B&Bs and restaurants within 5 miles of Dover port and cruise terminal — direct booking links for Dover, Deal and Canterbury.",
+      "Eight Dover hotels cruise passengers actually use — official photos, distances from CT1 and CT2, taxi times, parking and links to book direct before embarkation.",
     accent: "border-rose-500",
     panelBg: "bg-rose-600",
-    homeDashboard: false,
+    homeDashboard: true,
   },
 ] as const;
+
+export type KthSiteSection = (typeof KTH_SITE_SECTIONS)[number];
+export type KthSiteSectionId = KthSiteSection["id"];
 
 export const KTH_DASHBOARD_SECTIONS = KTH_SITE_SECTIONS.filter(
   (section) => section.homeDashboard,
 );
 
-export type KthSiteSection = (typeof KTH_SITE_SECTIONS)[number];
-export type KthSiteSectionId = KthSiteSection["id"];
+/** Homepage card order — daily checks only (no tourist sections). */
+export const KTH_HOME_SECTION_ORDER: readonly KthSiteSectionId[] = [
+  "cruise",
+  "ferries",
+  "live",
+  "visit",
+];
+
+export function kthHomeSections(): KthSiteSection[] {
+  const byId = Object.fromEntries(
+    KTH_SITE_SECTIONS.map((section) => [section.id, section]),
+  ) as Record<KthSiteSectionId, KthSiteSection>;
+  return KTH_HOME_SECTION_ORDER.map((id) => byId[id]);
+}
 
 export type SectionLivePreview = {
   headline: string;
