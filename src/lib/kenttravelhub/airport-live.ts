@@ -191,7 +191,7 @@ export function recommendedDoverDeparture(
   });
 }
 
-function londonWallClockToDate(
+export function londonWallClockToDate(
   year: number,
   month: number,
   day: number,
@@ -319,8 +319,14 @@ export function parseFlightInstant(value: string, ref = new Date()): Date | null
     return d;
   }
   if (/^\d{4}-\d{2}-\d{2}T\d{1,2}:\d{2}/.test(trimmed)) {
-    const d = new Date(trimmed);
-    return Number.isNaN(d.getTime()) ? null : d;
+    const [datePart, timePart] = trimmed.split("T");
+    const [year, month, day] = datePart.split("-").map(Number);
+    const [hour, minute] = timePart.split(":").map(Number);
+    if (
+      [year, month, day, hour, minute].every((n) => Number.isFinite(n))
+    ) {
+      return londonWallClockToDate(year, month, day, hour, minute);
+    }
   }
   const d = new Date(trimmed);
   return Number.isNaN(d.getTime()) ? null : d;
@@ -431,16 +437,7 @@ export function prioritizeUpcomingFlights(
     return ta - tb;
   });
 
-  const soon = ranked.filter(
-    ({ f, t }) =>
-      t &&
-      !isCompletedFlightStatus(f.status) &&
-      t.getTime() >= now - 45 * 60 * 1000 &&
-      t.getTime() <= now + 5 * 60 * 60 * 1000,
-  );
-
-  const pool = soon.length > 0 ? soon : ranked;
-  return pool.slice(0, limit).map(({ f }) => f);
+  return ranked.slice(0, limit).map(({ f }) => f);
 }
 
 export function isDelayedStatus(status: string): boolean {

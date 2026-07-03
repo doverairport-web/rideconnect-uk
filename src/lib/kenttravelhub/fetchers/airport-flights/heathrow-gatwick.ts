@@ -2,6 +2,7 @@ import {
   delayMinutesBetween,
   enrichFlightFlags,
   isCancelledStatus,
+  londonWallClockToDate,
   prioritizeUpcomingFlights,
   type KthAirportFlight,
   type KthFlightDirection,
@@ -191,13 +192,22 @@ export function parseGatwickFlightsHtml(
     const dateMatch = rowId.match(/_(\d{4}-\d{2}-\d{2})_[AD]$/);
     const datePart = dateMatch?.[1];
     const timePart = time.trim();
-    const scheduledTime = datePart
-      ? `${datePart}T${timePart.length === 5 ? timePart : timePart}:00`
-      : timePart;
+    const [hour, minute] = timePart.split(":").map(Number);
+    const scheduledTime =
+      datePart && Number.isFinite(hour) && Number.isFinite(minute)
+        ? londonWallClockToDate(
+            ...datePart.split("-").map(Number) as [number, number, number],
+            hour,
+            minute,
+          ).toISOString()
+        : timePart;
     const expectedMatch = statusText.match(/expected\s+(\d{1,2}:\d{2})/i);
     const estimatedTime =
       expectedMatch && datePart
-        ? `${datePart}T${expectedMatch[1]}:00`
+        ? londonWallClockToDate(
+            ...datePart.split("-").map(Number) as [number, number, number],
+            ...expectedMatch[1].split(":").map(Number) as [number, number],
+          ).toISOString()
         : expectedMatch
           ? expectedMatch[1]
           : undefined;
