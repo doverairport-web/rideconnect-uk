@@ -1,7 +1,9 @@
 import {
   DOVER_PORT,
   KTH_AIRPORTS,
+  nextTypicalFlightIso,
   recommendedDoverDeparture,
+  typicalFlightDepartureNote,
   type KthAirportId,
   type KthAirportJourney,
 } from "@/lib/kenttravelhub/airport-live";
@@ -100,8 +102,7 @@ export async function fetchAirportJourney(
   const journeyMinutes =
     live?.journeyMinutes ?? airport.staticJourneyMinutes;
 
-  const noon = new Date();
-  noon.setHours(14, 0, 0, 0);
+  const exampleFlightIso = nextTypicalFlightIso();
 
   return {
     journeyMinutes,
@@ -110,9 +111,10 @@ export async function fetchAirportJourney(
     source: live?.source ?? "static-estimate",
     recommendedDeparture: recommendedDoverDeparture(
       journeyMinutes,
-      noon.toISOString(),
+      exampleFlightIso,
       90,
     ),
+    recommendedDepartureNote: typicalFlightDepartureNote(),
   };
 }
 

@@ -32,8 +32,10 @@ export type KthAirportJourney = {
   normalMinutes?: number;
   delayMinutes?: number;
   source: string;
-  /** Leave Dover by this time for a typical midday international flight. */
+  /** Leave Dover by this time for the example flight below. */
   recommendedDeparture?: string;
+  /** Explains which example flight the leave-by time is based on. */
+  recommendedDepartureNote?: string;
 };
 
 export type KthAirportLiveBoard = {
@@ -189,6 +191,117 @@ export function recommendedDoverDeparture(
   });
 }
 
+function londonWallClockToDate(
+  year: number,
+  month: number,
+  day: number,
+  hour: number,
+  minute = 0,
+): Date {
+  const target = { year, month, day, hour, minute };
+  const guess = Date.UTC(year, month - 1, day, hour, minute);
+  for (let offset = -3; offset <= 3; offset++) {
+    const d = new Date(guess + offset * 3_600_000);
+    const parts = Object.fromEntries(
+      new Intl.DateTimeFormat("en-GB", {
+        timeZone: "Europe/London",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      })
+        .formatToParts(d)
+        .map((p) => [p.type, p.value]),
+    ) as Record<string, string>;
+    if (
+      Number(parts.year) === target.year &&
+      Number(parts.month) === target.month &&
+      Number(parts.day) === target.day &&
+      Number(parts.hour) === target.hour &&
+      Number(parts.minute) === target.minute
+    ) {
+      return d;
+    }
+  }
+  return new Date(guess);
+}
+
+/** Next 2pm Europe/London as an ISO string (today if still ahead, else tomorrow). */
+export function nextTypicalFlightIso(ref = new Date()): string {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Europe/London",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      hour12: false,
+    })
+      .formatToParts(ref)
+      .map((p) => [p.type, p.value]),
+  ) as Record<string, string>;
+
+  let day = Number(parts.day);
+  let month = Number(parts.month);
+  let year = Number(parts.year);
+  const hour = Number(parts.hour);
+
+  if (hour >= 14) {
+    const bumped = new Date(Date.UTC(year, month - 1, day + 1));
+    year = bumped.getUTCFullYear();
+    month = bumped.getUTCMonth() + 1;
+    day = bumped.getUTCDate();
+  }
+
+  return londonWallClockToDate(year, month, day, 14, 0).toISOString();
+}
+
+export function nextTypicalFlightTime(ref = new Date()): Date {
+  return new Date(nextTypicalFlightIso(ref));
+}
+
+export function typicalFlightDepartureNote(ref = new Date()): string {
+  const flight = nextTypicalFlightTime(ref);
+  const londonNow = new Date(
+    ref.toLocaleString("en-US", { timeZone: "Europe/London" }),
+  );
+  const isTomorrow =
+    flight.getDate() !== londonNow.getDate() ||
+    flight.getMonth() !== londonNow.getMonth() ||
+    flight.getFullYear() !== londonNow.getFullYear();
+  const dayLabel = isTomorrow
+    ? "tomorrow"
+    : flight.toLocaleDateString("en-GB", {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+        timeZone: "Europe/London",
+      });
+  return `Example for a 2pm flight ${dayLabel} (+ 90 min at airport)`;
+}
+
+const LUTON_STATUS_CODES: Record<string, string> = {
+  S: "Scheduled",
+  E: "Estimated",
+  C: "Cancelled",
+  D: "Delayed",
+};
+
+/** Turn single-letter airport status codes into readable labels. */
+export function formatAirportFlightStatus(
+  status: string,
+  message?: string,
+): string {
+  const detail = message?.trim();
+  if (detail) return detail;
+  const trimmed = status.trim();
+  const mapped = LUTON_STATUS_CODES[trimmed.toUpperCase()];
+  if (mapped) return mapped;
+  return trimmed || "Scheduled";
+}
+
 export function parseFlightInstant(value: string, ref = new Date()): Date | null {
   if (!value?.trim()) return null;
   const trimmed = value.trim();
@@ -256,15 +369,16 @@ export function enrichFlightFlags(flight: KthAirportFlight): KthAirportFlight {
   };
 }
 
-/** Show current and upcoming flights — drop stale completed rows from hours ago. */
+/** Show current and upcoming flights — prefer tonight before tomorrow morning. */
 export function prioritizeUpcomingFlights(
   flights: KthAirportFlight[],
   limit = 12,
   ref = new Date(),
 ): KthAirportFlight[] {
   const now = ref.getTime();
-  const windowStart = now - 60 * 60 * 1000;
-  const windowEnd = now + 18 * 60 * 60 * 1000;
+  const londonNow = new Date(
+    ref.toLocaleString("en-US", { timeZone: "Europe/London" }),
+  );
 
   const ranked = flights
     .map((f) => ({
@@ -280,19 +394,53 @@ export function prioritizeUpcomingFlights(
         return t.getTime() >= now - 90 * 60 * 1000;
       }
       if (!t) return true;
-      return t.getTime() >= windowStart && t.getTime() <= windowEnd;
+      return t.getTime() >= now - 60 * 60 * 1000 && t.getTime() <= now + 18 * 60 * 60 * 1000;
     });
+
+  function flightTier(t: number): number {
+    const offset = t - now;
+    // Active now or within the next 5 hours
+    if (offset >= -45 * 60 * 1000 && offset <= 5 * 60 * 60 * 1000) return 0;
+    // Later this evening (before midnight London)
+    const d = new Date(t);
+    const londonFlight = new Date(
+      d.toLocaleString("en-US", { timeZone: "Europe/London" }),
+    );
+    const sameDay =
+      londonFlight.getDate() === londonNow.getDate() &&
+      londonFlight.getMonth() === londonNow.getMonth() &&
+      londonFlight.getFullYear() === londonNow.getFullYear();
+    if (sameDay && offset > 0) return 1;
+    // After midnight but before 06:00 — only when nothing sooner exists
+    if (londonFlight.getHours() < 6 && offset > 0 && offset <= 10 * 60 * 60 * 1000) {
+      return 2;
+    }
+    return 3;
+  }
 
   ranked.sort((a, b) => {
     const aDone = isCompletedFlightStatus(a.f.status);
     const bDone = isCompletedFlightStatus(b.f.status);
     if (aDone !== bDone) return aDone ? 1 : -1;
+
     const ta = a.t?.getTime() ?? Number.MAX_SAFE_INTEGER;
     const tb = b.t?.getTime() ?? Number.MAX_SAFE_INTEGER;
+    const tierA = flightTier(ta);
+    const tierB = flightTier(tb);
+    if (tierA !== tierB) return tierA - tierB;
     return ta - tb;
   });
 
-  return ranked.slice(0, limit).map(({ f }) => f);
+  const soon = ranked.filter(
+    ({ f, t }) =>
+      t &&
+      !isCompletedFlightStatus(f.status) &&
+      t.getTime() >= now - 45 * 60 * 1000 &&
+      t.getTime() <= now + 5 * 60 * 60 * 1000,
+  );
+
+  const pool = soon.length > 0 ? soon : ranked;
+  return pool.slice(0, limit).map(({ f }) => f);
 }
 
 export function isDelayedStatus(status: string): boolean {

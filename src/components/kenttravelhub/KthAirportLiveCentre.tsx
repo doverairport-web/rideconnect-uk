@@ -2,6 +2,7 @@
 
 import {
   formatFlightTime,
+  formatAirportFlightStatus,
   type KthAirportFlight,
   type KthAirportId,
   type KthAirportLiveBoard,
@@ -72,7 +73,7 @@ function FlightRow({ flight }: { flight: KthAirportFlight }) {
                 : "text-kth-muted"
           }
         >
-          {flight.status}
+          {formatAirportFlightStatus(flight.status)}
         </span>
       </td>
       <td className="hidden py-2 text-kth-muted lg:table-cell">
@@ -137,12 +138,15 @@ function AirportLiveCard({
         </div>
         <div className="rounded-lg border border-kth-navy/6 bg-white px-3 py-2">
           <p className="text-[10px] font-bold uppercase text-kth-muted">
-            Leave Dover by
+            Example leave-by
           </p>
           <p className="mt-0.5 text-lg font-extrabold text-kth-navy">
             {board.journey.recommendedDeparture ?? "Plan early"}
           </p>
-          <p className="text-[10px] text-kth-muted">Typical 2pm flight + 90 min</p>
+          <p className="text-[10px] leading-snug text-kth-muted">
+            {board.journey.recommendedDepartureNote ??
+              "Example for a 2pm flight tomorrow (+ 90 min at airport)"}
+          </p>
         </div>
         <div className="rounded-lg border border-kth-navy/6 bg-white px-3 py-2">
           <p className="text-[10px] font-bold uppercase text-kth-muted">Delays</p>
@@ -383,7 +387,7 @@ function FlightTracker({ bookBase }: { bookBase: string }) {
                     : "rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800"
               }
             >
-              {result.flight.status}
+              {formatAirportFlightStatus(result.flight.status)}
             </span>
           </div>
 

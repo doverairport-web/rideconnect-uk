@@ -1,5 +1,6 @@
 import {
   enrichFlightFlags,
+  formatAirportFlightStatus,
   isCancelledStatus,
   prioritizeUpcomingFlights,
   type KthAirportFlight,
@@ -28,7 +29,8 @@ function parseLutonFlight(item: LutonFlight): KthAirportFlight | null {
   if (!item.flightNumber) return null;
 
   const direction: KthFlightDirection = item.isArrival ? "arrival" : "departure";
-  const status = item.message?.trim() || item.status || "Scheduled";
+  const rawStatus = item.status ?? "";
+  const status = formatAirportFlightStatus(rawStatus, item.message);
   const scheduled = item.scheduledTime ?? "";
   const estimated = item.estimatedTime;
 
@@ -44,7 +46,7 @@ function parseLutonFlight(item: LutonFlight): KthAirportFlight | null {
     status,
     gate: item.gateCode || undefined,
     delayed: false,
-    cancelled: isCancelledStatus(status, item.cancelled),
+    cancelled: isCancelledStatus(status, item.cancelled) || rawStatus.toUpperCase() === "C",
   });
 }
 
