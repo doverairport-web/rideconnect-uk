@@ -263,23 +263,15 @@ export function nextTypicalFlightTime(ref = new Date()): Date {
 }
 
 export function typicalFlightDepartureNote(ref = new Date()): string {
-  const flight = nextTypicalFlightTime(ref);
-  const londonNow = new Date(
-    ref.toLocaleString("en-US", { timeZone: "Europe/London" }),
+  const londonHour = Number(
+    new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Europe/London",
+      hour: "numeric",
+      hour12: false,
+    }).format(ref),
   );
-  const isTomorrow =
-    flight.getDate() !== londonNow.getDate() ||
-    flight.getMonth() !== londonNow.getMonth() ||
-    flight.getFullYear() !== londonNow.getFullYear();
-  const dayLabel = isTomorrow
-    ? "tomorrow"
-    : flight.toLocaleDateString("en-GB", {
-        weekday: "short",
-        day: "numeric",
-        month: "short",
-        timeZone: "Europe/London",
-      });
-  return `Example for a 2pm flight ${dayLabel} (+ 90 min at airport)`;
+  const dayLabel = londonHour >= 14 ? "tomorrow" : "today";
+  return `For a typical 2pm flight ${dayLabel} (+ 90 min at airport)`;
 }
 
 const LUTON_STATUS_CODES: Record<string, string> = {
@@ -386,6 +378,41 @@ export function prioritizeUpcomingFlights(
     ref.toLocaleString("en-US", { timeZone: "Europe/London" }),
   );
 
+  function sameLondonDay(a: Date, b: Date): boolean {
+    return (
+      a.getDate() === b.getDate() &&
+      a.getMonth() === b.getMonth() &&
+      a.getFullYear() === b.getFullYear()
+    );
+  }
+
+  function londonDateFromInstant(t: number): Date {
+    return new Date(
+      new Date(t).toLocaleString("en-US", { timeZone: "Europe/London" }),
+    );
+  }
+
+  function flightTier(t: number): number {
+    const offset = t - now;
+    const londonFlight = londonDateFromInstant(t);
+    const sameDay = sameLondonDay(londonFlight, londonNow);
+
+    // Just landed / imminently due (up to 45 min ago)
+    if (offset >= -45 * 60 * 1000 && offset <= 0) return 0;
+
+    // Still to come later today (before midnight London)
+    if (sameDay && offset > 0) return 0;
+
+    // After midnight but before 06:00 — early-morning bank
+    const isNextDay =
+      londonFlight.getTime() > londonNow.getTime() &&
+      !sameDay &&
+      londonFlight.getTime() - londonNow.getTime() < 36 * 60 * 60 * 1000;
+    if (isNextDay && londonFlight.getHours() < 6 && offset > 0) return 1;
+
+    return 2;
+  }
+
   const ranked = flights
     .map((f) => ({
       f,
@@ -403,27 +430,6 @@ export function prioritizeUpcomingFlights(
       return t.getTime() >= now - 60 * 60 * 1000 && t.getTime() <= now + 18 * 60 * 60 * 1000;
     });
 
-  function flightTier(t: number): number {
-    const offset = t - now;
-    // Active now or within the next 5 hours
-    if (offset >= -45 * 60 * 1000 && offset <= 5 * 60 * 60 * 1000) return 0;
-    // Later this evening (before midnight London)
-    const d = new Date(t);
-    const londonFlight = new Date(
-      d.toLocaleString("en-US", { timeZone: "Europe/London" }),
-    );
-    const sameDay =
-      londonFlight.getDate() === londonNow.getDate() &&
-      londonFlight.getMonth() === londonNow.getMonth() &&
-      londonFlight.getFullYear() === londonNow.getFullYear();
-    if (sameDay && offset > 0) return 1;
-    // After midnight but before 06:00 — only when nothing sooner exists
-    if (londonFlight.getHours() < 6 && offset > 0 && offset <= 10 * 60 * 60 * 1000) {
-      return 2;
-    }
-    return 3;
-  }
-
   ranked.sort((a, b) => {
     const aDone = isCompletedFlightStatus(a.f.status);
     const bDone = isCompletedFlightStatus(b.f.status);
@@ -437,7 +443,23 @@ export function prioritizeUpcomingFlights(
     return ta - tb;
   });
 
-  return ranked.slice(0, limit).map(({ f }) => f);
+  const withTier = ranked.map((entry) => ({
+    ...entry,
+    tier: flightTier(entry.t?.getTime() ?? Number.MAX_SAFE_INTEGER),
+  }));
+
+  const tonight = withTier.filter((e) => e.tier === 0);
+  const earlyMorning = withTier.filter((e) => e.tier === 1);
+  const later = withTier.filter((e) => e.tier >= 2);
+
+  const pool =
+    tonight.length > 0
+      ? tonight
+      : earlyMorning.length > 0
+        ? earlyMorning
+        : later;
+
+  return pool.slice(0, limit).map(({ f }) => f);
 }
 
 export function isDelayedStatus(status: string): boolean {

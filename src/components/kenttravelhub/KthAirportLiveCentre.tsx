@@ -138,14 +138,14 @@ function AirportLiveCard({
         </div>
         <div className="rounded-lg border border-kth-navy/6 bg-white px-3 py-2">
           <p className="text-[10px] font-bold uppercase text-kth-muted">
-            Example leave-by
+            Example leave Dover by
           </p>
           <p className="mt-0.5 text-lg font-extrabold text-kth-navy">
             {board.journey.recommendedDeparture ?? "Plan early"}
           </p>
           <p className="text-[10px] leading-snug text-kth-muted">
             {board.journey.recommendedDepartureNote ??
-              "Example for a 2pm flight tomorrow (+ 90 min at airport)"}
+              "For a typical 2pm flight tomorrow (+ 90 min at airport)"}
           </p>
         </div>
         <div className="rounded-lg border border-kth-navy/6 bg-white px-3 py-2">
