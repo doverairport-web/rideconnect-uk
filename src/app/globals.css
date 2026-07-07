@@ -5,6 +5,7 @@
   --brand-blue-light: #2563a8;
   --brand-green: #2eae4e;
   --brand-green-dark: #248f3f;
+  --brand-orange: #f5a623;
   --navy: var(--brand-blue);
   --navy-light: var(--brand-blue-light);
   --gold: var(--brand-green);
@@ -18,6 +19,7 @@
   --color-brand-blue-light: var(--brand-blue-light);
   --color-brand-green: var(--brand-green);
   --color-brand-green-dark: var(--brand-green-dark);
+  --color-brand-orange: var(--brand-orange);
   --color-navy: var(--navy);
   --color-navy-light: var(--navy-light);
   --color-gold: var(--gold);
@@ -62,6 +64,14 @@ body {
 
 .kenttravelhub .font-serif {
   font-family: var(--font-kth-serif), Georgia, "Times New Roman", serif;
+}
+
+.kenttravelhub .kth-article-prose p + p {
+  margin-top: 0;
+}
+
+.kenttravelhub .kth-article-prose h2 + p {
+  margin-top: 0;
 }
 
 .kenttravelhub .kth-ticker-track {

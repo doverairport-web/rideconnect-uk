@@ -49,6 +49,8 @@ const KTH_ANCHOR_PATHS: Record<string, string> = {
   "#cruise": "/cruise",
   "#ferries": "/ferries",
   "#airports": "/airports",
+  "#trains": "/trains",
+  "#buses": "/buses",
   "#hub": "/live",
   "#live": "/live",
   "#webcams": "/live",
@@ -59,11 +61,13 @@ const KTH_ANCHOR_PATHS: Record<string, string> = {
 
 const SECTION_HUB_IDS: Record<
   KthSiteSectionId,
-  (keyof typeof KTH_CATEGORY_CARD_LINKS)[]
+  Array<(typeof KTH_INFO_HUB_SECTIONS)[number]["id"] | "trains" | "buses">
 > = {
   cruise: ["cruise"],
   ferries: ["ferry"],
   airports: ["airports"],
+  trains: ["trains"],
+  buses: ["buses"],
   live: ["roads", "cameras"],
   visit: [],
   stay: ["hotels", "restaurants"],
@@ -142,28 +146,14 @@ export async function resolveDoverRestaurantLinks(): Promise<ResolvedDoverRestau
 }
 
 export async function resolveDoverHotelLinks(): Promise<ResolvedDoverHotel[]> {
-  return Promise.all(
-    KTH_DOVER_HOTELS.map((hotel) => {
-      if ("external" in hotel) {
-        return Promise.resolve({
-          id: hotel.id,
-          label: hotel.label,
-          href: hotel.external,
-          external: true as const,
-          subtitle: hotel.subtitle,
-          priceFrom: hotel.priceFrom,
-        });
-      }
-      return Promise.resolve({
-        id: hotel.id,
-        label: hotel.label,
-        href: kthBookingSearchUrl(hotel.bookingSearch),
-        external: true as const,
-        subtitle: hotel.subtitle,
-        priceFrom: hotel.priceFrom,
-      });
-    }),
-  );
+  return KTH_DOVER_HOTELS.map((hotel) => ({
+    id: hotel.id,
+    label: hotel.label,
+    href: hotel.external,
+    external: true as const,
+    subtitle: hotel.subtitle,
+    priceFrom: hotel.priceFrom,
+  }));
 }
 
 export async function resolveHubSections(): Promise<ResolvedHubSection[]> {

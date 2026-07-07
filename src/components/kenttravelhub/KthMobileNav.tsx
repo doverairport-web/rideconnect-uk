@@ -1,5 +1,6 @@
 "use client";
 
+import { KthWhatsAppChannelFollow } from "@/components/kenttravelhub/KthWhatsAppChannelFollow";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -82,7 +83,7 @@ export function KthMobileNav({ links, bookHref }: Props) {
                 </li>
               ))}
             </ul>
-            <div className="border-t border-kth-navy/8 px-4 py-4">
+            <div className="border-t border-kth-navy/8 px-4 py-4 space-y-3">
               <Link
                 href={bookHref}
                 onClick={() => setOpen(false)}
@@ -90,6 +91,9 @@ export function KthMobileNav({ links, bookHref }: Props) {
               >
                 Book Taxi
               </Link>
+              <div onClick={() => setOpen(false)}>
+                <KthWhatsAppChannelFollow variant="button" className="w-full [&>a]:w-full" />
+              </div>
             </div>
           </nav>
         </>

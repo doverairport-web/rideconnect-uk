@@ -1,7 +1,7 @@
-import { KTH_NEWS_THUMBNAILS } from "@/lib/kenttravelhub/content";
+import { getKthArticleImage } from "@/lib/kenttravelhub/article-images";
 import { getAllKthArticles } from "@/lib/kenttravelhub/articles";
 import { kthPath } from "@/lib/kenttravelhub/paths";
-import Image from "next/image";
+import { KthSafeImage } from "@/components/kenttravelhub/KthSafeImage";
 import Link from "next/link";
 
 export async function KthHomeTravelUpdates() {
@@ -18,7 +18,7 @@ export async function KthHomeTravelUpdates() {
     articles.map(async (article) => ({
       article,
       href: await kthPath(`/news/${article.slug}`),
-      image: KTH_NEWS_THUMBNAILS[article.slug],
+      image: getKthArticleImage(article.slug, article.category),
     })),
   );
 
@@ -52,7 +52,7 @@ export async function KthHomeTravelUpdates() {
               >
                 {image && (
                   <div className="relative h-20 w-28 shrink-0 overflow-hidden rounded-lg">
-                    <Image
+                    <KthSafeImage
                       src={image}
                       alt=""
                       fill

@@ -1,6 +1,7 @@
 import { KthAirportLiveCentre } from "@/components/kenttravelhub/KthAirportLiveCentre";
 import { KthSectionHubLinks } from "@/components/kenttravelhub/KthSectionHubLinks";
 import { KthSectionShell } from "@/components/kenttravelhub/KthSectionShell";
+import { KthWhatsAppChannelFollow } from "@/components/kenttravelhub/KthWhatsAppChannelFollow";
 import { KTH_AIRPORT_LIVE_INTRO } from "@/lib/kenttravelhub/airport-live";
 import { kthSectionPageMetadata } from "@/lib/kenttravelhub/section-metadata";
 import { kthBookUrl, kthPath } from "@/lib/kenttravelhub/paths";
@@ -9,7 +10,7 @@ import { KTH_SITE_SECTIONS } from "@/lib/kenttravelhub/sections";
 import type { Metadata } from "next";
 import Link from "next/link";
 
-const section = KTH_SITE_SECTIONS[2];
+const section = KTH_SITE_SECTIONS.find((s) => s.id === "airports")!;
 
 export async function generateMetadata(): Promise<Metadata> {
   return kthSectionPageMetadata(section);
@@ -30,6 +31,7 @@ export default async function KthAirportsSectionPage() {
   return (
     <KthSectionShell section={section}>
       <KthSectionHubLinks links={links} title="Airport live &amp; guides" />
+      <KthWhatsAppChannelFollow variant="banner" />
 
       <section className="border-b border-kth-navy/8 bg-white py-8 sm:py-10">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">

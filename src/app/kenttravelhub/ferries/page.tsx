@@ -1,7 +1,9 @@
 import { KthFerryUpdates } from "@/components/kenttravelhub/KthFerryUpdates";
 import { KthSectionHubLinks } from "@/components/kenttravelhub/KthSectionHubLinks";
 import { KthSectionShell } from "@/components/kenttravelhub/KthSectionShell";
+import { KthWhatsAppChannelFollow } from "@/components/kenttravelhub/KthWhatsAppChannelFollow";
 import { KTH_FERRY_TOPICS } from "@/lib/kenttravelhub/content";
+import { KTH_DAILY_QUESTIONS, KTH_FERRY_CHECK_IN_TODAY } from "@/lib/kenttravelhub/home-dashboard";
 import { kthSectionPageMetadata } from "@/lib/kenttravelhub/section-metadata";
 import { resolveSectionLinks } from "@/lib/kenttravelhub/resolve-hub-links";
 import { kthPath } from "@/lib/kenttravelhub/paths";
@@ -30,6 +32,29 @@ export default async function KthFerriesSectionPage() {
   return (
     <KthSectionShell section={section}>
       <KthSectionHubLinks links={links} />
+      <KthWhatsAppChannelFollow variant="banner" />
+      <section className="border-b border-kth-navy/8 bg-white py-8">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+          <p className="max-w-3xl text-sm font-semibold leading-relaxed text-kth-muted">
+            {KTH_DAILY_QUESTIONS.ferries}
+          </p>
+          <ul className="mt-6 grid gap-3 sm:grid-cols-2">
+            {KTH_FERRY_CHECK_IN_TODAY.map((tip) => (
+              <li
+                key={tip.id}
+                className="rounded-lg border border-kth-navy/8 bg-kth-sand/40 p-4"
+              >
+                <p className="text-xs font-extrabold uppercase tracking-wide text-kth-sea">
+                  {tip.title}
+                </p>
+                <p className="mt-1 text-sm leading-relaxed text-kth-navy/85">
+                  {tip.detail}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
       <KthFerryUpdates guideLinks={guideLinks} />
       <section className="border-t border-kth-navy/8 bg-kth-sand py-10">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">

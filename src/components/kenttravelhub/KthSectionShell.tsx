@@ -55,7 +55,7 @@ export async function KthSectionShell({ section, children }: Props) {
                 Section {section.number}
               </p>
               <h1 className="font-serif text-2xl font-bold text-kth-navy sm:text-3xl">
-                {section.label}
+                {section.homeHeading}
               </h1>
             </div>
           </div>

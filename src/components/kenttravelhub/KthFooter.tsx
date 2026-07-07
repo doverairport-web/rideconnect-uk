@@ -2,6 +2,10 @@ import { KTH_NAME, KTH_POWERED_BY, KTH_SITE_URL } from "@/lib/kenttravelhub/bran
 import { KTH_SITE_SECTIONS } from "@/lib/kenttravelhub/sections";
 import { KthCookieSettingsLink } from "@/components/kenttravelhub/KthCookieConsent";
 import { KthEmailCapture } from "@/components/kenttravelhub/KthEmailCapture";
+import { KthWhatsAppChannelFollow } from "@/components/kenttravelhub/KthWhatsAppChannelFollow";
+import {
+  KTH_WHATSAPP_CHANNEL_DESCRIPTION,
+} from "@/lib/kenttravelhub/brand";
 import { hasKthAnalytics } from "@/lib/kenttravelhub/analytics";
 import { kthBookUrl, kthPath } from "@/lib/kenttravelhub/paths";
 import Link from "next/link";
@@ -22,6 +26,15 @@ export async function KthFooter() {
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
         <div className="mb-8">
           <KthEmailCapture source="footer" compact variant="dark" />
+        </div>
+
+        <div className="mb-8 rounded-lg border border-[#25D366]/30 bg-[#25D366]/10 p-4 sm:flex sm:items-center sm:justify-between sm:gap-4">
+          <p className="text-sm leading-relaxed text-white/85">
+            {KTH_WHATSAPP_CHANNEL_DESCRIPTION}
+          </p>
+          <div className="mt-3 shrink-0 sm:mt-0">
+            <KthWhatsAppChannelFollow variant="button" tone="dark" />
+          </div>
         </div>
 
         <div className="grid gap-8 sm:grid-cols-3">

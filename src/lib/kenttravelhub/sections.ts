@@ -57,6 +57,40 @@ export const KTH_SITE_SECTIONS = [
   },
   {
     number: 4,
+    id: "trains",
+    path: "/trains",
+    label: "Trains",
+    homeHeading: "Train Live Centre",
+    shortLabel: "Trains",
+    emoji: "🚆",
+    description:
+      "Live Dover Priory departures and arrivals — Southeastern delays, London connections and taxi times to the cruise and ferry terminals.",
+    metaTitle: "Train Live Centre | Dover Priory & Kent Rail | Kent Travel Hub",
+    metaDescription:
+      "Live train boards for Dover Priory, Folkestone, Ashford and Canterbury — departures, arrivals, delays, Southeastern alerts and taxi times to CT1, CT2 and the ferry port.",
+    accent: "border-sky-500",
+    panelBg: "bg-sky-600",
+    homeDashboard: true,
+  },
+  {
+    number: 5,
+    id: "buses",
+    path: "/buses",
+    label: "Buses",
+    homeHeading: "Bus Live Centre",
+    shortLabel: "Buses",
+    emoji: "🚌",
+    description:
+      "Live Stagecoach departures for Dover town centre, Priory station, ferry and cruise docks — plus routes to Canterbury and Folkestone.",
+    metaTitle: "Bus Live Centre | Dover & Kent Buses | Kent Travel Hub",
+    metaDescription:
+      "Live bus boards for Dover Pencester Road, Priory station, Eastern Docks and Western Docks — Stagecoach routes to Canterbury, Folkestone, Deal and the White Cliffs.",
+    accent: "border-lime-500",
+    panelBg: "bg-lime-600",
+    homeDashboard: true,
+  },
+  {
+    number: 6,
     id: "live",
     path: "/live",
     label: "Live Travel",
@@ -73,7 +107,7 @@ export const KTH_SITE_SECTIONS = [
     homeDashboard: true,
   },
   {
-    number: 5,
+    number: 7,
     id: "visit",
     path: "/visit",
     label: "Visit Kent",
@@ -90,7 +124,7 @@ export const KTH_SITE_SECTIONS = [
     homeDashboard: true,
   },
   {
-    number: 6,
+    number: 8,
     id: "stay",
     path: "/stay",
     label: "Hotels & Eat",
@@ -204,6 +238,22 @@ export function buildSiteSectionLive(
     return {
       headline: "Gatwick, Heathrow, Stansted, Luton",
       detail: "Transfer guides and typical journey times from Dover",
+      severity: "neutral",
+    };
+  }
+
+  if (sectionId === "trains") {
+    return {
+      headline: "Dover Priory live board",
+      detail: "Southeastern to London St Pancras & Victoria — taxi to port",
+      severity: "neutral",
+    };
+  }
+
+  if (sectionId === "buses") {
+    return {
+      headline: "Dover town centre buses",
+      detail: "Stagecoach 15, 63, 66 — Priory, ferry & cruise docks",
       severity: "neutral",
     };
   }

@@ -9,13 +9,6 @@ type Props = {
   params: Promise<{ slug: string }>;
 };
 
-const LIVE_PANEL_SLUGS = new Set([
-  "dover-port-waiting-times",
-  "m20-traffic-today",
-  "dover-ferry-dfds-po-updates",
-  "operation-brock-kent",
-]);
-
 export async function generateStaticParams() {
   return getAllKthArticles().map((article) => ({ slug: article.slug }));
 }
@@ -38,10 +31,5 @@ export default async function KentTravelHubArticleRoute({ params }: Props) {
   const article = getKthArticle(slug);
   if (!article) notFound();
 
-  return (
-    <KthArticlePage
-      article={article}
-      showLivePanel={LIVE_PANEL_SLUGS.has(slug)}
-    />
-  );
+  return <KthArticlePage article={article} />;
 }

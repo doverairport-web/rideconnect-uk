@@ -1,4 +1,5 @@
 import { doverAirportFares } from "@/lib/pricing";
+import { KTH_CRUISE_HOTELS } from "@/lib/kenttravelhub/cruise-hotels";
 
 export const KTH_CRUISE_TERMINAL_META = {
   title: "Dover Cruise Terminal Guide 2026 | CT1 & CT2 Maps, Taxis & Hotels",
@@ -106,52 +107,7 @@ export const KTH_CRUISE_TAXI_RANK = {
   ],
 } as const;
 
-export const KTH_CRUISE_TERMINAL_HOTELS = [
-  {
-    id: "marina",
-    name: "Best Western Plus Dover Marina Hotel",
-    distance: "5 min to CT1/CT2",
-    price: "from £85",
-    description:
-      "Harbour-side hotel with restaurant and parking — popular with cruise passengers the night before embarkation.",
-    search: "Best Western Plus Dover Marina Hotel, Dover",
-    image:
-      "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80",
-  },
-  {
-    id: "premier",
-    name: "Premier Inn Dover Central",
-    distance: "8 min to terminals",
-    price: "from £65",
-    description:
-      "Reliable budget chain near Dover town centre and Eastern Docks — easy taxi to CT1 or CT2.",
-    search: "Premier Inn Dover Central, Kent",
-    image:
-      "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=800&q=80",
-  },
-  {
-    id: "cliffs",
-    name: "The White Cliffs Hotel",
-    distance: "10 min to terminals",
-    price: "from £90",
-    description:
-      "Boutique hotel above the port with Channel views — ideal post-cruise overnight before an airport run.",
-    search: "White Cliffs Hotel Dover, Kent",
-    image:
-      "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=800&q=80",
-  },
-  {
-    id: "hub",
-    name: "Hubert House (B&B)",
-    distance: "12 min to terminals",
-    price: "from £70",
-    description:
-      "Guest house on Dover seafront — quieter alternative with easy taxi access to the cruise berths.",
-    search: "Dover seafront guest house, Kent",
-    image:
-      "https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&fit=crop&w=800&q=80",
-  },
-] as const;
+export const KTH_CRUISE_TERMINAL_HOTELS = KTH_CRUISE_HOTELS;
 
 export const KTH_CRUISE_TERMINAL_RESTAURANTS = [
   {

@@ -1,11 +1,12 @@
 import {
   KTH_EXPLORE_GRID,
-  KTH_NEWS_THUMBNAILS,
   KTH_POPULAR_TRANSFERS,
   KTH_TOP_DESTINATIONS,
 } from "@/lib/kenttravelhub/content";
+import { getKthArticleImage } from "@/lib/kenttravelhub/article-images";
 import { getAllKthArticles } from "@/lib/kenttravelhub/articles";
 import { kthPath } from "@/lib/kenttravelhub/paths";
+import { KthSafeImage } from "@/components/kenttravelhub/KthSafeImage";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -27,7 +28,7 @@ export async function KthMainGrid() {
     getAllKthArticles().slice(0, 4).map(async (article) => ({
       article,
       href: await kthPath(`/news/${article.slug}`),
-      image: KTH_NEWS_THUMBNAILS[article.slug],
+      image: getKthArticleImage(article.slug, article.category),
     })),
   );
   const exploreTiles = KTH_EXPLORE_GRID.map((tile) => ({
@@ -99,7 +100,7 @@ export async function KthMainGrid() {
                   <Link href={href} className="group flex gap-3 rounded-lg p-1 transition hover:bg-kth-sand">
                     {image && (
                       <div className="relative h-14 w-20 shrink-0 overflow-hidden rounded-md">
-                        <Image
+                        <KthSafeImage
                           src={image}
                           alt=""
                           fill

@@ -1,34 +1,35 @@
-import { KTH_MOST_READ_GUIDES, KTH_NEWS_THUMBNAILS } from "@/lib/kenttravelhub/content";
-import { getAllKthArticles, getKthArticle } from "@/lib/kenttravelhub/articles";
+import {
+  KTH_MOST_POPULAR_THIS_WEEK,
+} from "@/lib/kenttravelhub/content";
+import { getKthGuideListImage } from "@/lib/kenttravelhub/article-images";
+import { getKthArticle } from "@/lib/kenttravelhub/articles";
+import { KTH_NAME } from "@/lib/kenttravelhub/brand";
 import { kthPath } from "@/lib/kenttravelhub/paths";
-import Image from "next/image";
+import { KthSafeImage } from "@/components/kenttravelhub/KthSafeImage";
 import Link from "next/link";
 
 export async function KthHomePopularGuides() {
   const newsIndex = await kthPath("/news");
 
-  const curated = KTH_MOST_READ_GUIDES.map((slug) => getKthArticle(slug)).filter(
-    (article) => article !== undefined,
-  );
-
-  const articles =
-    curated.length >= 4
-      ? curated
-      : getAllKthArticles()
-          .slice()
-          .sort(
-            (a, b) =>
-              new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
-          )
-          .slice(0, 6);
-
   const guideLinks = await Promise.all(
-    articles.map(async (article, index) => ({
-      article,
-      href: await kthPath(`/news/${article.slug}`),
-      image: KTH_NEWS_THUMBNAILS[article.slug],
-      rank: index + 1,
-    })),
+    KTH_MOST_POPULAR_THIS_WEEK.map(async (item, index) => {
+      const article = item.slug ? getKthArticle(item.slug) : undefined;
+      const href = item.path
+        ? await kthPath(item.path)
+        : item.slug
+          ? await kthPath(`/news/${item.slug}`)
+          : newsIndex;
+
+      return {
+        title: item.title,
+        href,
+        image: getKthGuideListImage(item),
+        category: article?.category,
+        excerpt: article?.excerpt,
+        readMinutes: article?.readMinutes,
+        rank: index + 1,
+      };
+    }),
   );
 
   return (
@@ -39,12 +40,13 @@ export async function KthHomePopularGuides() {
             <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-kth-sea">
               Travel guides
             </p>
-            <h2 className="mt-1 text-xl font-extrabold text-kth-navy sm:text-2xl">
-              Most read before Dover
+            <p className="mt-1 text-sm font-semibold text-kth-navy">{KTH_NAME}</p>
+            <h2 className="mt-2 text-xl font-extrabold text-kth-navy sm:text-2xl">
+              🔥 Most Popular This Week
             </h2>
             <p className="mt-1 max-w-xl text-sm text-kth-muted">
-              The guides travellers open most — port queues, M20, ferries, cruise
-              terminal and airport routes.
+              The guides travellers open most — port queues, M20, cruise
+              terminal, Heathrow routes and ferry updates.
             </p>
           </div>
           <Link
@@ -55,44 +57,52 @@ export async function KthHomePopularGuides() {
           </Link>
         </div>
 
-        <ol className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {guideLinks.map(({ article, href, image, rank }) => (
-            <li key={article.slug}>
-              <Link
-                href={href}
-                className="group flex h-full gap-4 rounded-xl border border-kth-navy/8 bg-kth-sand/30 p-4 transition hover:border-kth-sea/35 hover:bg-kth-sand hover:shadow-sm"
-              >
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-kth-navy text-xs font-extrabold text-kth-gold">
-                  {rank}
-                </span>
-                {image && (
-                  <div className="relative hidden h-16 w-20 shrink-0 overflow-hidden rounded-md sm:block">
-                    <Image
-                      src={image}
-                      alt=""
-                      fill
-                      className="object-cover transition group-hover:scale-105"
-                      sizes="80px"
-                    />
+        <ol className="mt-6 grid gap-3 sm:grid-cols-1 lg:grid-cols-1">
+          {guideLinks.map(
+            ({ title, href, image, category, excerpt, readMinutes, rank }) => (
+              <li key={title}>
+                <Link
+                  href={href}
+                  className="group flex h-full gap-4 rounded-xl border border-kth-navy/8 bg-kth-sand/30 p-4 transition hover:border-kth-sea/35 hover:bg-kth-sand hover:shadow-sm sm:items-center"
+                >
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-kth-navy text-xs font-extrabold text-kth-gold">
+                    {rank}
+                  </span>
+                  {image && (
+                    <div className="relative hidden h-14 w-20 shrink-0 overflow-hidden rounded-md sm:block">
+                      <KthSafeImage
+                        src={image}
+                        alt=""
+                        fill
+                        className="object-cover transition group-hover:scale-105"
+                        sizes="80px"
+                      />
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold leading-snug text-kth-navy group-hover:text-kth-sea sm:text-base">
+                      {title}
+                    </p>
+                    {excerpt && (
+                      <p className="mt-1 line-clamp-1 text-xs leading-relaxed text-kth-muted">
+                        {excerpt}
+                      </p>
+                    )}
+                    {(category || readMinutes) && (
+                      <p className="mt-1 text-[11px] text-kth-muted">
+                        {[category, readMinutes ? `${readMinutes} min read` : null]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
+                    )}
                   </div>
-                )}
-                <div className="min-w-0 flex-1">
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-kth-sea">
-                    {article.category}
-                  </p>
-                  <p className="mt-0.5 text-sm font-semibold leading-snug text-kth-navy group-hover:text-kth-sea">
-                    {article.title}
-                  </p>
-                  <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-kth-muted">
-                    {article.excerpt}
-                  </p>
-                  <p className="mt-2 text-[11px] text-kth-muted">
-                    {article.readMinutes} min read
-                  </p>
-                </div>
-              </Link>
-            </li>
-          ))}
+                  <span className="hidden shrink-0 text-sm font-semibold text-kth-sea group-hover:text-kth-navy sm:inline">
+                    Read →
+                  </span>
+                </Link>
+              </li>
+            ),
+          )}
         </ol>
       </div>
     </section>

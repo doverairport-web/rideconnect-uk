@@ -1,10 +1,9 @@
+import { KthCruiseHotelCards } from "@/components/kenttravelhub/KthCruiseHotelCards";
 import { KthCruiseTerminalLive } from "@/components/kenttravelhub/KthCruiseTerminalLive";
-import { KthArticleInternalLinks } from "@/components/kenttravelhub/KthArticleInternalLinks";
 import { KthEmailCapture } from "@/components/kenttravelhub/KthEmailCapture";
 import {
   KTH_CRUISE_TAXI_RANK,
   KTH_CRUISE_TERMINAL_FAQS,
-  KTH_CRUISE_TERMINAL_HOTELS,
   KTH_CRUISE_TERMINAL_MAPS,
   KTH_CRUISE_TERMINAL_META,
   KTH_CRUISE_TERMINAL_NAV,
@@ -12,13 +11,11 @@ import {
   KTH_CRUISE_TERMINALS,
   KTH_CRUISE_TRANSFERS,
 } from "@/lib/kenttravelhub/cruise-terminal-guide";
-import { hasKthAffiliates, kthBookingAffiliateUrl } from "@/lib/kenttravelhub/affiliates";
-import { getKthArticle } from "@/lib/kenttravelhub/articles";
+import { KTH_CRUISE_HOTELS } from "@/lib/kenttravelhub/cruise-hotels";
 import { KTH_POWERED_BY } from "@/lib/kenttravelhub/brand";
 import { kthBookUrl, kthPath } from "@/lib/kenttravelhub/paths";
 import { kthBreadcrumbJsonLd, kthFaqJsonLd } from "@/lib/kenttravelhub/seo";
 import { primaryPhone, telHref } from "@/lib/contact";
-import Image from "next/image";
 import Link from "next/link";
 
 function osmEmbed(lat: number, lng: number, zoom: number): string {
@@ -38,9 +35,7 @@ export async function KthCruiseTerminalGuidePage() {
     campaign: "cruise-terminal-guide",
     content: "transfers",
   });
-  const affiliateEnabled = hasKthAffiliates();
   const news = await kthPath("/news");
-  const guideArticle = getKthArticle("dover-cruise-terminal-guide");
 
   const transferLinks = await Promise.all(
     KTH_CRUISE_TRANSFERS.map(async (route) => ({
@@ -130,12 +125,6 @@ export async function KthCruiseTerminalGuidePage() {
 
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
         <KthCruiseTerminalLive cruiseHref={cruise} />
-
-        {guideArticle && (
-          <div className="mt-10">
-            <KthArticleInternalLinks article={guideArticle} placement="top" />
-          </div>
-        )}
 
         <div className="mt-16 grid gap-8 lg:grid-cols-2">
           {KTH_CRUISE_TERMINALS.map((terminal) => (
@@ -343,82 +332,16 @@ export async function KthCruiseTerminalGuidePage() {
             short taxi from CT1 and CT2.
           </p>
 
-          <div className="mt-8 grid gap-6 sm:grid-cols-2">
-            {KTH_CRUISE_TERMINAL_HOTELS.map((hotel) => {
-              const affiliateUrl = kthBookingAffiliateUrl(hotel.search);
-              const card = (
-                <>
-                  <div className="relative aspect-[16/9]">
-                    <Image
-                      src={hotel.image}
-                      alt={hotel.name}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 640px) 100vw, 50vw"
-                    />
-                  </div>
-                  <div className="p-5">
-                    <div className="flex items-start justify-between gap-3">
-                      <h3 className="font-serif text-lg font-bold text-kth-navy">
-                        {hotel.name}
-                      </h3>
-                      <span className="shrink-0 text-xs font-semibold text-kth-sea">
-                        {hotel.price}
-                      </span>
-                    </div>
-                    <p className="mt-1 text-xs font-semibold text-kth-muted">
-                      {hotel.distance}
-                    </p>
-                    <p className="mt-3 text-sm leading-relaxed text-kth-muted">
-                      {hotel.description}
-                    </p>
-                    {affiliateUrl ? (
-                      <p className="mt-3 text-sm font-semibold text-kth-sea">
-                        Compare on Booking.com →
-                      </p>
-                    ) : null}
-                  </div>
-                </>
-              );
-
-              if (affiliateUrl) {
-                return (
-                  <a
-                    key={hotel.id}
-                    href={affiliateUrl}
-                    target="_blank"
-                    rel="sponsored noopener noreferrer"
-                    className="group overflow-hidden rounded-xl border border-kth-navy/8 bg-white shadow-sm transition hover:border-kth-sea/30 hover:shadow-md"
-                  >
-                    {card}
-                  </a>
-                );
-              }
-
-              return (
-                <article
-                  key={hotel.id}
-                  className="overflow-hidden rounded-xl border border-kth-navy/8 bg-white shadow-sm"
-                >
-                  {card}
-                </article>
-              );
-            })}
+          <div className="mt-8">
+            <KthCruiseHotelCards limit={4} />
           </div>
 
           <Link
-            href={await kthPath("/news/hotels-near-dover-cruise-terminal")}
+            href={await kthPath("/stay#hotels")}
             className="mt-6 inline-flex text-sm font-semibold text-kth-sea hover:text-kth-navy"
           >
-            Full hotels guide →
+            All {KTH_CRUISE_HOTELS.length} cruise hotels with CT1 &amp; CT2 distances →
           </Link>
-
-          {affiliateEnabled && (
-            <p className="mt-4 text-xs text-kth-muted/80">
-              We may earn a commission from hotel bookings — at no extra cost to
-              you.
-            </p>
-          )}
         </section>
 
         <section id="restaurants" className="scroll-mt-24 mt-16">

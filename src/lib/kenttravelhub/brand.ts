@@ -2,10 +2,10 @@ import { BRAND_LEGAL } from "@/lib/brand";
 
 export const KTH_NAME = "Kent Travel Hub";
 export const KTH_TAGLINE = "Check Dover before you travel";
-export const KTH_HERO_EYEBROW = "Live Dover travel board";
+export const KTH_HERO_EYEBROW = "Daily Dover travel check";
 export const KTH_HERO_HEADLINE = "Check Dover Before You Travel";
 export const KTH_HERO_SUBHEADLINE =
-  "Live port, ferry, cruise and road conditions — plus the guides people read before crossing to France or catching a ship.";
+  "Bookmark this page. Before every ferry, cruise pickup or drive to the port — check ships, delays, queues, M20, weather and pickup advice here first.";
 export const KTH_HERO_IMAGE = "/kenttravelhub/hero-dover.jpg";
 export const KTH_HERO_IMAGE_ALT =
   "Cruise ship at Dover port with the White Cliffs of Dover in the background";
@@ -28,7 +28,16 @@ export const KTH_SITE_URL =
 export const KTH_POWERED_BY = BRAND_LEGAL;
 
 export const KTH_SEO_LINE =
-  "Check Dover before you travel — live port traffic, ferry delays, cruise arrivals, M20 and Operation Brock updates, plus Kent travel guides.";
+  "Bookmark Kent Travel Hub — daily Dover cruise ships, ferry delays, port queues, M20, Operation Brock and weather before you travel.";
 
 export const KTH_EMAIL =
   process.env.NEXT_PUBLIC_EMAIL?.trim() || "info@rideconnectuk.com";
+
+/** Kent Travel Hub WhatsApp Channel — live Dover travel updates. */
+export const KTH_WHATSAPP_CHANNEL_URL =
+  "https://whatsapp.com/channel/0029Vb8EyXVATRSvvzZhVm3L";
+
+export const KTH_WHATSAPP_CHANNEL_LABEL = "Follow us on WhatsApp";
+
+export const KTH_WHATSAPP_CHANNEL_DESCRIPTION =
+  "Follow Kent Travel Hub on WhatsApp:";

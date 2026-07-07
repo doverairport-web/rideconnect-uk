@@ -2,6 +2,7 @@ import {
   KTH_AIRPORT_ROUTES,
   kthAirportGuidePrice,
 } from "@/lib/kenttravelhub/content";
+import { KTH_AIRPORT_JOURNEY_GUIDES } from "@/lib/kenttravelhub/home-dashboard";
 import { kthPath } from "@/lib/kenttravelhub/paths";
 import Link from "next/link";
 
@@ -10,6 +11,10 @@ const AIRPORT_GUIDES: Record<string, string> = {
   heathrow: "heathrow-to-dover",
 };
 
+const journeyByCode = Object.fromEntries(
+  KTH_AIRPORT_JOURNEY_GUIDES.map((guide) => [guide.code, guide]),
+) as Record<string, (typeof KTH_AIRPORT_JOURNEY_GUIDES)[number]>;
+
 export async function KthAirportTransfers() {
   const routes = await Promise.all(
     KTH_AIRPORT_ROUTES.map(async (route) => ({
@@ -17,6 +22,7 @@ export async function KthAirportTransfers() {
       guideHref: AIRPORT_GUIDES[route.code]
         ? await kthPath(`/taxi/${AIRPORT_GUIDES[route.code]}`)
         : null,
+      journey: journeyByCode[route.code],
     })),
   );
 
@@ -30,12 +36,13 @@ export async function KthAirportTransfers() {
           Airport Transfers from Dover
         </h2>
         <p className="mt-3 max-w-2xl text-kth-muted">
-          Getting to Gatwick, Heathrow, Stansted and Luton from Dover — journey
-          times, routes and what to expect with luggage after a cruise or ferry.
+          Private hire and taxi routes from Dover port and cruise terminal to
+          London airports — typical journey times, fares and advice for cruise
+          passengers catching a flight the same day.
         </p>
 
         <div className="mt-10 grid gap-4 sm:grid-cols-2">
-          {routes.map(({ route, guideHref }) => {
+          {routes.map(({ route, guideHref, journey }) => {
             const inner = (
               <>
                 <p className="font-serif text-xl font-bold group-hover:text-kth-sea">
@@ -44,6 +51,16 @@ export async function KthAirportTransfers() {
                 <p className="mt-2 text-sm text-kth-muted">
                   From {route.from} to {route.to}
                 </p>
+                {journey && (
+                  <>
+                    <p className="mt-3 text-sm font-bold text-kth-gold">
+                      Est. journey time: {journey.journeyTime}
+                    </p>
+                    <p className="mt-2 text-xs leading-relaxed text-kth-muted">
+                      {journey.cruiseNote}
+                    </p>
+                  </>
+                )}
                 <p className="mt-4 text-sm font-semibold text-kth-sea">
                   Typical taxi fare from £{kthAirportGuidePrice(route.code)}
                   {guideHref ? " · View route guide →" : ""}

@@ -1,6 +1,10 @@
 import type { AirportCode } from "@/lib/pricing";
 import { doverAirportFares } from "@/lib/pricing";
 import { KTH_EXPLORE_IMAGES } from "@/lib/kenttravelhub/brand";
+import {
+  KTH_CRUISE_HOTELS,
+  formatHotelPrice,
+} from "@/lib/kenttravelhub/cruise-hotels";
 
 export const KTH_POPULAR_TRANSFERS = [
   {
@@ -45,13 +49,44 @@ export const KTH_POPULAR_TRANSFERS = [
 
 /** Curated “most read” guides for the homepage board. */
 export const KTH_MOST_READ_GUIDES = [
-  "m20-traffic-today",
   "dover-port-waiting-times",
-  "dover-ferry-dfds-po-updates",
+  "m20-traffic-today",
   "dover-cruise-terminal-guide",
-  "operation-brock-kent",
   "dover-to-heathrow",
+  "dover-ferry-dfds-po-updates",
 ] as const;
+
+/** Homepage “Most Popular This Week” — order and labels for Travel Guides. */
+export type KthPopularGuideItem = {
+  title: string;
+  slug?: string;
+  path?: string;
+};
+
+export const KTH_MOST_POPULAR_THIS_WEEK: readonly KthPopularGuideItem[] = [
+  {
+    title: "Dover Port Waiting Times",
+    slug: "dover-port-waiting-times",
+  },
+  {
+    title: "M20 Traffic Today",
+    slug: "m20-traffic-today",
+  },
+  {
+    title: "Dover Cruise Terminal Guide",
+    path: "/cruise-terminal",
+    slug: "dover-cruise-terminal-guide",
+  },
+  {
+    title: "Dover to Heathrow Guide",
+    slug: "dover-to-heathrow",
+  },
+  {
+    title: "Ferry Updates",
+    path: "/ferries",
+    slug: "dover-ferry-dfds-po-updates",
+  },
+];
 
 export const KTH_SEARCH_TOPICS = [
   { id: "m20", label: "M20 traffic", articleSlug: "m20-traffic-today" },
@@ -245,70 +280,21 @@ export type KthCategoryCardLink =
   | { id: string; label: string; book: true }
   | { id: string; label: string; bookingSearch: string };
 
-/** Named Dover hotels & B&Bs — direct sites or Booking.com search. */
-export const KTH_DOVER_HOTELS = [
-  {
-    id: "marina",
-    label: "Dover Marina Hotel",
-    subtitle: "Seafront · 5 min to port",
-    external: "https://dovermarinahotel.co.uk/",
-    priceFrom: "£85",
-  },
-  {
-    id: "holiday-inn",
-    label: "Holiday Inn Dover",
-    subtitle: "Whitfield · 10 min to port",
-    external: "https://www.holidayinndover.co.uk/",
-    priceFrom: "£80",
-  },
-  {
-    id: "premier",
-    label: "Premier Inn Dover",
-    subtitle: "Town centre · budget",
-    external:
-      "https://www.premierinn.com/gb/en/hotels/england/kent/dover/dover-central.html",
-    priceFrom: "£65",
-  },
-  {
-    id: "travelodge",
-    label: "Travelodge Dover",
-    subtitle: "Eastern Docks area",
-    external: "https://www.travelodge.co.uk/hotels/558/Dover-hotel",
-    priceFrom: "£55",
-  },
-  {
-    id: "white-cliffs",
-    label: "White Cliffs Hotel",
-    subtitle: "Boutique · port views",
-    external: "https://www.whitecliffshoteldover.com/",
-    priceFrom: "£90",
-  },
-  {
-    id: "hubert",
-    label: "Hubert House B&B",
-    subtitle: "Seafront guest house",
-    bookingSearch: "Hubert House Guest House Dover Kent",
-    priceFrom: "£70",
-  },
-  {
-    id: "albany",
-    label: "Albany Lodge B&B",
-    subtitle: "Town centre B&B",
-    bookingSearch: "Albany Lodge Dover Kent",
-    priceFrom: "£65",
-  },
-  {
-    id: "marlborough",
-    label: "Marlborough Hotel",
-    subtitle: "Seafront · classic Dover",
-    bookingSearch: "Marlborough Hotel Dover Kent",
-    priceFrom: "£60",
-  },
-] as const;
+/** Named Dover hotels for compact link lists — sourced from cruise-passenger guide. */
+export const KTH_DOVER_HOTELS = KTH_CRUISE_HOTELS.map((hotel) => ({
+  id: hotel.id,
+  label: hotel.name,
+  subtitle: `${hotel.taxiMinutes} to CT1/CT2`,
+  external: hotel.officialUrl,
+  priceFrom: formatHotelPrice(hotel.priceFrom),
+}));
 
 /** Quick links shown under each hub section on the homepage. */
 export const KTH_CATEGORY_CARD_LINKS: Partial<
-  Record<(typeof KTH_INFO_HUB_SECTIONS)[number]["id"], readonly KthCategoryCardLink[]>
+  Record<
+    (typeof KTH_INFO_HUB_SECTIONS)[number]["id"] | "trains" | "buses",
+    readonly KthCategoryCardLink[]
+  >
 > = {
   cruise: [
     { id: "arrivals", label: "Arrivals today", anchor: "#cruise" },
@@ -387,6 +373,59 @@ export const KTH_CATEGORY_CARD_LINKS: Partial<
     { id: "heathrow-pickup", label: "Heathrow pickup", path: "/taxi/heathrow-to-dover" },
     { id: "gatwick-pickup", label: "Gatwick pickup", path: "/taxi/gatwick-to-dover" },
     { id: "m20", label: "M20 traffic", articleSlug: "m20-traffic-today" },
+  ],
+  trains: [
+    { id: "live", label: "Train live centre", path: "/trains" },
+    { id: "dover-priory", label: "Dover Priory board", path: "/trains#dover-priory" },
+    {
+      id: "southeastern-tickets",
+      label: "Buy Southeastern tickets",
+      external: "https://ticket.southeasternrailway.co.uk/",
+    },
+    {
+      id: "national-rail-tickets",
+      label: "National Rail tickets",
+      external: "https://www.nationalrail.co.uk/tickets/",
+    },
+    { id: "london", label: "Dover → London", articleSlug: "dover-to-london" },
+    { id: "cruise", label: "Priory → Cruise Terminal", path: "/cruise-terminal" },
+    { id: "ferry", label: "Priory → Ferry Terminal", path: "/ferries" },
+    { id: "castle", label: "Priory → Dover Castle", path: "/visit" },
+    {
+      id: "southeastern",
+      label: "Southeastern updates",
+      external:
+        "https://www.southeasternrailway.co.uk/travel-information/service-updates",
+    },
+  ],
+  buses: [
+    { id: "live", label: "Bus live centre", path: "/buses" },
+    { id: "town-centre", label: "Pencester Road board", path: "/buses#dover-town-centre" },
+    { id: "london-coach", label: "Coaches to London", path: "/buses#dover-london-coach" },
+    {
+      id: "national-express-tickets",
+      label: "Buy National Express tickets",
+      external: "https://www.nationalexpress.com/en/coach",
+    },
+    {
+      id: "stagecoach-tickets",
+      label: "Buy Stagecoach tickets",
+      external: "https://www.stagecoachbus.com/tickets",
+    },
+    { id: "priory", label: "Dover Priory buses", path: "/buses#dover-priory" },
+    { id: "ferry", label: "Ferry terminal buses", path: "/buses#ferry-terminal" },
+    { id: "cruise", label: "Cruise terminal buses", path: "/buses#cruise-terminal" },
+    { id: "canterbury", label: "Dover → Canterbury", path: "/buses#canterbury" },
+    {
+      id: "stagecoach",
+      label: "Stagecoach South East",
+      external: "https://www.stagecoachbus.com/south-east",
+    },
+    {
+      id: "traveline",
+      label: "Traveline South East",
+      external: "https://www.travelinesoutheast.org.uk/",
+    },
   ],
   roads: [
     { id: "live", label: "Live snapshot", anchor: "#hub" },
@@ -614,6 +653,7 @@ export const KTH_AIRPORT_ROUTES: {
   { code: "gatwick", label: "Dover → Gatwick", from: "Dover", to: "London Gatwick" },
   { code: "heathrow", label: "Dover → Heathrow", from: "Dover", to: "London Heathrow" },
   { code: "stansted", label: "Dover → Stansted", from: "Dover", to: "London Stansted" },
+  { code: "city", label: "Dover → London City", from: "Dover", to: "London City Airport" },
   { code: "luton", label: "Dover → Luton", from: "Dover", to: "London Luton" },
 ];
 
@@ -674,6 +714,18 @@ export const KTH_VISIT_KENT = [
     linkLabel: "English Heritage",
     articleSlug: "dover-castle-visitor-guide",
     milesFromDover: 1,
+  },
+  {
+    id: "lighthouse",
+    title: "South Foreland Lighthouse",
+    description:
+      "Victorian lighthouse on the White Cliffs — guided tours and Channel views a short drive from CT1 and CT2.",
+    image: KTH_EXPLORE_IMAGES.cliffs,
+    external:
+      "https://www.nationaltrust.org.uk/visit/kent/south-foreland-lighthouse",
+    linkLabel: "National Trust",
+    articleSlug: "white-cliffs-dover-visitor-guide",
+    milesFromDover: 3,
   },
   {
     id: "canterbury",

@@ -1,5 +1,6 @@
 import { KthLogo } from "@/components/kenttravelhub/KthLogo";
 import { KthMobileNav } from "@/components/kenttravelhub/KthMobileNav";
+import { KthWhatsAppChannelFollow } from "@/components/kenttravelhub/KthWhatsAppChannelFollow";
 import { kthBookUrl, kthPath } from "@/lib/kenttravelhub/paths";
 import { primaryPhone, telHref } from "@/lib/contact";
 import Link from "next/link";
@@ -16,6 +17,8 @@ export async function KthHeader() {
     { href: await kthPath("/cruise-terminal"), label: "Cruise Terminal" },
     { href: await kthPath("/ferries"), label: "Ferries" },
     { href: await kthPath("/airports"), label: "Airports" },
+    { href: await kthPath("/trains"), label: "Trains" },
+    { href: await kthPath("/buses"), label: "Buses" },
     { href: await kthPath("/live"), label: "Live Travel" },
     { href: await kthPath("/visit"), label: "Visit Kent" },
     { href: await kthPath("/stay"), label: "Stay" },
@@ -67,6 +70,7 @@ export async function KthHeader() {
           >
             Book Taxi
           </Link>
+          <KthWhatsAppChannelFollow variant="compact" />
           <div className="hidden items-center gap-1.5 rounded-md border border-kth-navy/10 px-2 py-1.5 text-xs font-medium text-kth-navy lg:flex">
             <span aria-hidden>🇬🇧</span>
             <span>EN</span>

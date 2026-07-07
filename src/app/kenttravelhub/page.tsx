@@ -3,13 +3,9 @@ import {
   KTH_NAME,
   KTH_SEO_LINE,
 } from "@/lib/kenttravelhub/brand";
-import { KthBookBanner } from "@/components/kenttravelhub/KthBookBanner";
-import { KthHero } from "@/components/kenttravelhub/KthHero";
+import { KthHomeDashboard } from "@/components/kenttravelhub/KthHomeDashboard";
+import { KthHomeHero } from "@/components/kenttravelhub/KthHomeHero";
 import { KthHomePageSchema } from "@/components/kenttravelhub/KthHomePageSchema";
-import { KthHomePopularGuides } from "@/components/kenttravelhub/KthHomePopularGuides";
-import { KthLiveStatusBar } from "@/components/kenttravelhub/KthLiveStatusBar";
-import { KthStayTeaser } from "@/components/kenttravelhub/KthStayTeaser";
-import { KTH_LIVE_DETAIL_LINKS } from "@/lib/kenttravelhub/live-links";
 import { kthPageMetadata } from "@/lib/kenttravelhub/seo";
 import type { Metadata } from "next";
 
@@ -25,11 +21,8 @@ export default async function KentTravelHubPage() {
   return (
     <>
       <KthHomePageSchema />
-      <KthHero />
-      <KthLiveStatusBar links={KTH_LIVE_DETAIL_LINKS} />
-      <KthHomePopularGuides />
-      <KthStayTeaser />
-      <KthBookBanner />
+      <KthHomeHero />
+      <KthHomeDashboard />
     </>
   );
 }
