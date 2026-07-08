@@ -15,8 +15,8 @@ export default function DoverToGatwickHomePage() {
       <RcPassengerApp />
       <RcWhyRideConnect />
       <RcBookSection
-        title="Book Dover to Gatwick online"
-        description="Pre-book your Gatwick, Heathrow, Stansted or Luton transfer — add flight and cruise details in the notes."
+        title="Book East Kent airport transfers online"
+        description="Pre-book from Dover, Deal, Sandwich, Folkestone or Canterbury — add pickup town, flight and cruise details in the notes."
       />
     </>
   );

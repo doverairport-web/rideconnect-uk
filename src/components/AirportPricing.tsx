@@ -101,10 +101,11 @@ export function AirportPricing() {
             </p>
           </div>
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
-            <p className="font-medium">Outside Dover district</p>
+            <p className="font-medium">East Kent zone pickups</p>
             <p className="mt-1">
-              Pickups in Deal, Folkestone, Canterbury or Ashford — fare agreed
-              between driver and hirer before the journey.
+              Fixed fares from Deal, Sandwich, Folkestone, Canterbury and Ashford
+              are scaled from the Dover tariff by distance. Paris and other
+              international routes — quote on request.
             </p>
           </div>
         </div>

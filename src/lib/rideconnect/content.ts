@@ -10,7 +10,8 @@ export const RC_SERVICES = [
   {
     id: "airport",
     title: "Airport Transfers",
-    description: "Fixed fares to Gatwick, Heathrow, Stansted, Luton and London City from Dover and pickup hubs.",
+    description:
+      "Fixed fares to Gatwick, Heathrow, Stansted, Luton and London City from Dover, Deal, Sandwich, Folkestone and Canterbury.",
     href: `${customerBookUrl}?type=airport`,
   },
   {
@@ -35,10 +36,58 @@ export const RC_SERVICES = [
 
 export const RC_COVERAGE_AREAS = [
   { name: "Dover", description: "Full local taxi service — port, cruise, town and Priory station." },
-  { name: "Deal", description: "Airport transfer pickup hub — Heathrow, Gatwick and Paris when pre-booked." },
+  { name: "Deal", description: "Fixed airport fares to Gatwick, Heathrow, Stansted and Luton." },
+  { name: "Sandwich", description: "East Kent airport pickup — fixed fares to London airports." },
   { name: "Folkestone", description: "Airport and cruise connections from Folkestone and Channel Tunnel." },
-  { name: "Canterbury", description: "Pre-booked airport transfers and local private hire." },
+  { name: "Canterbury", description: "Fixed airport transfers and local private hire." },
   { name: "Ashford", description: "International station and airport transfer pickup point." },
+] as const;
+
+export const RC_MARKETING_WHY_CARDS = [
+  {
+    id: "drivers-earn",
+    title: "Drivers keep up to 90%",
+    highlight: "90%",
+    description: "We believe local drivers should keep more of what they earn.",
+    icon: "wallet" as const,
+    accent: "green" as const,
+  },
+  {
+    id: "local-drivers",
+    title: "Local Kent drivers",
+    description:
+      "Professional local drivers who know Dover, Kent, ports, airports and schools.",
+    icon: "map" as const,
+    accent: "navy" as const,
+  },
+  {
+    id: "no-surge",
+    title: "No surge pricing",
+    description: "Fair, clear pricing without sudden surge charges.",
+    icon: "chart" as const,
+    accent: "navy" as const,
+  },
+  {
+    id: "airport-fares",
+    title: "Fixed airport fares",
+    description: "Book airport transfers with clear prices and reliable pickup planning.",
+    icon: "plane" as const,
+    accent: "navy" as const,
+  },
+  {
+    id: "cruise",
+    title: "Cruise specialists",
+    description: "Dover Cruise Terminal pickups with luggage-friendly vehicles.",
+    icon: "ship" as const,
+    accent: "navy" as const,
+  },
+  {
+    id: "book-your-way",
+    title: "Book your way",
+    description: "Book online, through the passenger app, by WhatsApp or by phone.",
+    icon: "devices" as const,
+    accent: "navy" as const,
+  },
 ] as const;
 
 export const RC_WHY_CARDS = [
@@ -57,6 +106,32 @@ export const RC_SCHOOL_FEATURES = [
   "Weekly recurring bookings",
   "Parent notifications",
   "Reliable pickup times",
+  "Kent County Council school run contracts",
+  "Multi-stop pickups across Dover",
+  "Child locks fitted when required",
+  "Invoice billing for councils and schools",
+] as const;
+
+/** Example school-run patterns (anonymised from live contract work). */
+export const RC_SCHOOL_RUN_EXAMPLES = [
+  {
+    id: "morning-college",
+    label: "Morning college run",
+    time: "Early morning pickup",
+    summary: "Collect pupils from Dover addresses, then one journey to college.",
+    pickups: ["Dover — home pickups"],
+    dropOff: "EKC Broadstairs College, Broadstairs",
+    notes: "Child locks on rear doors when requested.",
+  },
+  {
+    id: "afternoon-return",
+    label: "Afternoon return",
+    time: "After college finish",
+    summary: "College pickup, then separate drop-offs at home addresses in Dover.",
+    pickups: ["East Kent College / Broadstairs area"],
+    dropOff: "Dover — home drop-offs",
+    notes: "Estate vehicles with space for bags and equipment.",
+  },
 ] as const;
 
 export const RC_GATWICK_AIRPORTS = [

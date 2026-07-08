@@ -49,11 +49,87 @@ export const doverAirportFares: Record<AirportCode, AirportFare> = {
   city: { car: 186, mpv: 279 },
 };
 
+/** Approximate one-way road miles from Dover — used to scale zone pickup fares. */
+const DOVER_AIRPORT_MILES: Record<AirportCode, number> = {
+  gatwick: 98,
+  heathrow: 122,
+  stansted: 97,
+  luton: 116,
+  city: 75,
+};
+
+function scaleAirportFaresFromDover(
+  miles: Record<AirportCode, number>,
+): Record<AirportCode, AirportFare> {
+  const result = {} as Record<AirportCode, AirportFare>;
+  for (const { code } of airports) {
+    const car = Math.round(
+      doverAirportFares[code].car * (miles[code] / DOVER_AIRPORT_MILES[code]),
+    );
+    const mpv = Math.round(
+      car * (doverAirportFares[code].mpv / doverAirportFares[code].car),
+    );
+    result[code] = { car, mpv };
+  }
+  return result;
+}
+
+const dealAirportFares = scaleAirportFaresFromDover({
+  gatwick: 88,
+  heathrow: 112,
+  stansted: 87,
+  luton: 106,
+  city: 65,
+});
+
+const sandwichAirportFares = scaleAirportFaresFromDover({
+  gatwick: 85,
+  heathrow: 109,
+  stansted: 84,
+  luton: 103,
+  city: 62,
+});
+
+const folkestoneAirportFares = scaleAirportFaresFromDover({
+  gatwick: 85,
+  heathrow: 115,
+  stansted: 90,
+  luton: 108,
+  city: 68,
+});
+
+const canterburyAirportFares = scaleAirportFaresFromDover({
+  gatwick: 70,
+  heathrow: 95,
+  stansted: 85,
+  luton: 100,
+  city: 72,
+});
+
+const ashfordAirportFares = scaleAirportFaresFromDover({
+  gatwick: 58,
+  heathrow: 82,
+  stansted: 78,
+  luton: 88,
+  city: 55,
+});
+
+/** East Kent airport transfer zone shown on dovertogatwicktaxi.com */
+export const eastKentAirportZoneIds = [
+  "dover",
+  "deal",
+  "sandwich",
+  "folkestone",
+  "canterbury",
+] as const;
+
+export type EastKentAirportZoneId = (typeof eastKentAirportZoneIds)[number];
+
 export const townPricing: TownPricing[] = [
   {
     id: "dover",
     town: "Dover",
-    note: "Dover district",
+    note: "Dover district — official tariff",
     isOfficial: true,
     prices: { ...doverAirportFares },
     paris: "quote",
@@ -61,56 +137,45 @@ export const townPricing: TownPricing[] = [
   {
     id: "deal",
     town: "Deal",
-    note: "Outside district",
-    prices: {
-      gatwick: "quote",
-      heathrow: "quote",
-      stansted: "quote",
-      luton: "quote",
-      city: "quote",
-    },
+    note: "East Kent zone",
+    prices: { ...dealAirportFares },
+    paris: "quote",
+  },
+  {
+    id: "sandwich",
+    town: "Sandwich",
+    note: "East Kent zone",
+    prices: { ...sandwichAirportFares },
     paris: "quote",
   },
   {
     id: "folkestone",
     town: "Folkestone",
-    note: "Outside district",
-    prices: {
-      gatwick: "quote",
-      heathrow: "quote",
-      stansted: "quote",
-      luton: "quote",
-      city: "quote",
-    },
+    note: "East Kent zone",
+    prices: { ...folkestoneAirportFares },
     paris: "quote",
   },
   {
     id: "canterbury",
     town: "Canterbury",
-    note: "Outside district",
-    prices: {
-      gatwick: "quote",
-      heathrow: "quote",
-      stansted: "quote",
-      luton: "quote",
-      city: "quote",
-    },
+    note: "East Kent zone",
+    prices: { ...canterburyAirportFares },
     paris: "quote",
   },
   {
     id: "ashford",
     town: "Ashford",
-    note: "Outside district",
-    prices: {
-      gatwick: "quote",
-      heathrow: "quote",
-      stansted: "quote",
-      luton: "quote",
-      city: "quote",
-    },
+    note: "East Kent zone",
+    prices: { ...ashfordAirportFares },
     paris: "quote",
   },
 ];
+
+export function getEastKentAirportPricing(): TownPricing[] {
+  return townPricing.filter((row) =>
+    (eastKentAirportZoneIds as readonly string[]).includes(row.id),
+  );
+}
 
 export const fareCategories: FareCategory[] = [
   {
