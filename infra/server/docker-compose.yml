@@ -1,0 +1,178 @@
+# RideConnect production infrastructure stack
+# Location on server: /opt/rideconnect/docker-compose.yml
+# All data lives in named Docker volumes (persistent).
+# Only nginx (80/443) is exposed publicly. Everything else binds to 127.0.0.1
+# so it is reachable only via SSH tunnel or through nginx.
+
+name: rideconnect
+
+networks:
+  rideconnect:
+    driver: bridge
+
+volumes:
+  pg_data:
+  redis_data:
+  portainer_data:
+  prometheus_data:
+  grafana_data:
+  loki_data:
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: rc-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: rideconnect
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: rideconnect
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks: [rideconnect]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rideconnect"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: rc-redis
+    restart: unless-stopped
+    # noeviction + maxmemory: Redis holds durable application state for the
+    # contact-center (BullMQ queues, Redis Streams, call-queue/presence). Silent
+    # eviction would drop queued calls/jobs, so writes are rejected when full
+    # instead. See docs/REDIS.md for the decision record.
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}", "--maxmemory", "512mb", "--maxmemory-policy", "noeviction"]
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis_data:/data
+    networks: [rideconnect]
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a $REDIS_PASSWORD ping | grep PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: rc-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /opt/rideconnect/nginx/conf.d:/etc/nginx/conf.d:ro
+      - /opt/rideconnect/nginx/html:/usr/share/nginx/html:ro
+      - /opt/rideconnect/nginx/certbot/www:/var/www/certbot:ro
+      - /opt/rideconnect/nginx/letsencrypt:/etc/letsencrypt:ro
+    networks: [rideconnect]
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # Run on demand via scripts/issue-certs.sh (profile keeps it out of `up -d`)
+  certbot:
+    image: certbot/certbot
+    container_name: rc-certbot
+    profiles: [certs]
+    volumes:
+      - /opt/rideconnect/nginx/certbot/www:/var/www/certbot
+      - /opt/rideconnect/nginx/letsencrypt:/etc/letsencrypt
+
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: rc-portainer
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:9443:9443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    networks: [rideconnect]
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: rc-prometheus
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=30d
+    ports:
+      - "127.0.0.1:9090:9090"
+    volumes:
+      - /opt/rideconnect/monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks: [rideconnect]
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: rc-grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+      GF_SERVER_ROOT_URL: https://dispatch.rideconnectuk.com/grafana/
+      GF_SERVER_SERVE_FROM_SUB_PATH: "true"
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - /opt/rideconnect/monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    networks: [rideconnect]
+
+  loki:
+    image: grafana/loki:3.4.2
+    container_name: rc-loki
+    restart: unless-stopped
+    command: -config.file=/etc/loki/loki-config.yml
+    ports:
+      - "127.0.0.1:3100:3100"
+    volumes:
+      - /opt/rideconnect/monitoring/loki/loki-config.yml:/etc/loki/loki-config.yml:ro
+      - loki_data:/loki
+    networks: [rideconnect]
+
+  promtail:
+    image: grafana/promtail:3.4.2
+    container_name: rc-promtail
+    restart: unless-stopped
+    command: -config.file=/etc/promtail/promtail-config.yml
+    volumes:
+      - /opt/rideconnect/monitoring/promtail/promtail-config.yml:/etc/promtail/promtail-config.yml:ro
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks: [rideconnect]
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: rc-node-exporter
+    restart: unless-stopped
+    command:
+      - --path.rootfs=/host
+    pid: host
+    volumes:
+      - /:/host:ro,rslave
+    networks: [rideconnect]
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: rc-cadvisor
+    restart: unless-stopped
+    privileged: true
+    devices:
+      - /dev/kmsg
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+    networks: [rideconnect]
