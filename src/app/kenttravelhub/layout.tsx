@@ -6,7 +6,6 @@ import { KthAdSenseAuto } from "@/components/kenttravelhub/KthAdSenseScript";
 import { KthAnalyticsLoader } from "@/components/kenttravelhub/KthAnalyticsLoader";
 import { KthWebSiteSchema } from "@/components/kenttravelhub/KthWebSiteSchema";
 import {
-  KTH_HERO_HEADLINE,
   KTH_NAME,
   KTH_SEO_LINE,
   KTH_SITE_URL,
@@ -28,7 +27,7 @@ export async function generateMetadata(): Promise<Metadata> {
     metadataBase: new URL(KTH_SITE_URL),
     openGraph: {
       ...meta.openGraph,
-      title: `${KTH_NAME} | ${KTH_HERO_HEADLINE}`,
+      title: `${KTH_NAME} | ${KTH_TAGLINE}`,
     },
     ...(verification ? { verification: { google: verification } } : {}),
   };

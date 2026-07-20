@@ -80,7 +80,7 @@ export const HOMEKENT_LANDING_PAGES: HomeKentLandingPage[] = [
   },
   {
     slug: "end-of-tenancy-cleaning-dover",
-    title: "End of Tenancy Cleaning Dover",
+    title: "End of Tenancy Cleaning Dover | HomeKent",
     h1: "End of Tenancy Cleaning in Dover",
     description:
       "End of tenancy and move-out cleans in Dover and East Kent. Inventory-ready finish for landlords and tenants — from £240.",

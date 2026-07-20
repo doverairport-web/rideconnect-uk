@@ -1,7 +1,7 @@
 import {
-  KTH_HERO_HEADLINE,
   KTH_NAME,
   KTH_SEO_LINE,
+  KTH_TAGLINE,
 } from "@/lib/kenttravelhub/brand";
 import { KthHomeDashboard } from "@/components/kenttravelhub/KthHomeDashboard";
 import { KthHomeHero } from "@/components/kenttravelhub/KthHomeHero";
@@ -11,7 +11,7 @@ import type { Metadata } from "next";
 
 export async function generateMetadata(): Promise<Metadata> {
   return kthPageMetadata({
-    title: `${KTH_NAME} | ${KTH_HERO_HEADLINE}`,
+    title: `${KTH_NAME} | ${KTH_TAGLINE}`,
     description: KTH_SEO_LINE,
     openGraphType: "website",
   });
