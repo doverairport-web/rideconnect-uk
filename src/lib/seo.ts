@@ -71,7 +71,7 @@ export function localBusinessJsonLd(site?: RideConnectSiteConfig) {
 export const SEO_TITLE = "Dover Taxi | Book Online — Local & Airport Transfers Kent";
 
 export const SEO_DESCRIPTION =
-  "Book a Dover taxi online — local trips, hospital, station, cruise port and airport transfers. Fixed fares to Gatwick and Heathrow. Call 01304 350125.";
+  "Book a Dover taxi online for local trips, cruise port and airport transfers. Fixed fares to Gatwick & Heathrow. Call 01304 350125.";
 
 export const SEO_KEYWORDS = [
   "Dover taxi",

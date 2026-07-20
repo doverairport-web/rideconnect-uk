@@ -1,7 +1,7 @@
 import { BRAND_LEGAL } from "@/lib/brand";
 
 export const KTH_NAME = "Kent Travel Hub";
-export const KTH_TAGLINE = "Check Dover before you travel";
+export const KTH_TAGLINE = "Dover Port & Cruise Updates";
 export const KTH_HERO_EYEBROW = "Daily Dover travel check";
 export const KTH_HERO_HEADLINE = "Check Dover Before You Travel";
 export const KTH_HERO_SUBHEADLINE =
@@ -28,7 +28,7 @@ export const KTH_SITE_URL =
 export const KTH_POWERED_BY = BRAND_LEGAL;
 
 export const KTH_SEO_LINE =
-  "Bookmark Kent Travel Hub — daily Dover cruise ships, ferry delays, port queues, M20, Operation Brock and weather before you travel.";
+  "Live Dover cruise ships, ferry delays, port queues, M20, Operation Brock and weather — check Kent Travel Hub before you travel.";
 
 export const KTH_EMAIL =
   process.env.NEXT_PUBLIC_EMAIL?.trim() || "info@rideconnectuk.com";

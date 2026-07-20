@@ -46,9 +46,9 @@ export const RIDECONNECT_SITES: Record<RideConnectSiteId, RideConnectSiteConfig>
     heroBadge: "Kent & South East England",
     showNetworkBanner: false,
     networkBannerText: "",
-    seoTitle: `${BRAND_LEGAL} | Book Taxis, Airport & Cruise Transfers Online`,
+    seoTitle: "RideConnect UK | Kent Taxi & Airport Transfers",
     seoDescription:
-      "RideConnect UK — book local taxis, airport transfers, cruise port pickups and school transport across Dover, Deal, Folkestone, Canterbury and Ashford. Fixed airport fares, WhatsApp booking and passenger app.",
+      "Book Kent taxis, airport and cruise transfers across Dover, Deal, Folkestone and Canterbury. Fixed fares, WhatsApp booking, available 24/7.",
     seoKeywords: [
       BRAND_LEGAL,
       "RideConnect taxi",
@@ -65,15 +65,15 @@ export const RIDECONNECT_SITES: Record<RideConnectSiteId, RideConnectSiteConfig>
     siteUrl: DOVER_TAXI_URL,
     brandTitle: BRAND_LEGAL,
     localSubtitle: "Dover Taxi & Airport Transfers",
-    heroTitle: "Book local taxis and airport transfers with RideConnect UK.",
+    heroTitle: "Dover taxi — local trips, cruise port and airport transfers.",
     heroSubtitle:
-      "Dover taxi service — port, cruise, town and station. Pre-booked airport transfers from Deal, Folkestone, Canterbury and Ashford.",
+      "Pre-book Dover taxis for town, hospital, station and cruise. Fixed-fare airport transfers from Deal, Folkestone, Canterbury and Ashford.",
     heroBadge: "Based in Dover, Kent",
     showNetworkBanner: false,
     networkBannerText: "",
     seoTitle: "Dover Taxi | Book Online — Local & Airport Transfers Kent",
     seoDescription:
-      "Book a Dover taxi online — local trips, hospital, station, cruise port and airport transfers. Fixed fares to Gatwick and Heathrow with RideConnect UK. Call 01304 350125.",
+      "Book a Dover taxi online for local trips, cruise port and airport transfers. Fixed fares to Gatwick & Heathrow. Call 01304 350125.",
     seoKeywords: [
       "Dover taxi",
       "taxi Dover",
@@ -94,13 +94,13 @@ export const RIDECONNECT_SITES: Record<RideConnectSiteId, RideConnectSiteConfig>
     localSubtitle: "Dover & Kent Taxi Services",
     heroTitle: "Dover & Kent taxi services with RideConnect UK.",
     heroSubtitle:
-      "Licensed local drivers for Dover, Deal, Folkestone and Kent airport transfers — book online, by phone or WhatsApp.",
+      "Licensed local drivers for Dover, Deal, Folkestone and Kent airport transfers — book online with map, fare estimate and card payment.",
     heroBadge: "Dover & Kent",
     showNetworkBanner: true,
     networkBannerText: "Part of the RideConnect UK network",
-    seoTitle: "Dover & Kent Taxi | RideConnect UK | Book Online",
+    seoTitle: "Orion Taxis Dover | Book Online | RideConnect UK",
     seoDescription:
-      "Book Dover and Kent taxis with RideConnect UK — airport transfers, cruise port pickups and local journeys. Part of the RideConnect UK driver network.",
+      "Book Dover and Kent taxis online with RideConnect UK. Airport transfers, cruise port pickups, map route and dispatch. Call 01304 350125.",
     seoKeywords: [
       "Dover taxi",
       "Kent taxi",
@@ -116,16 +116,15 @@ export const RIDECONNECT_SITES: Record<RideConnectSiteId, RideConnectSiteConfig>
     siteUrl: GATWICK_URL,
     brandTitle: BRAND_LEGAL,
     localSubtitle: "East Kent Airport Transfers",
-    heroTitle: "East Kent airport transfers with RideConnect UK.",
+    heroTitle: "Dover to Gatwick taxi — fixed fares from East Kent.",
     heroSubtitle:
       "Fixed fares from Dover, Deal, Sandwich, Folkestone and Canterbury to Gatwick, Heathrow, Stansted, Luton and London City. Cruise and port pickups available.",
     heroBadge: "Fixed airport fares",
     showNetworkBanner: true,
     networkBannerText: "Part of the RideConnect UK network",
-    seoTitle:
-      "East Kent Airport Taxi | Dover, Deal, Canterbury | Fixed Fares | RideConnect UK",
+    seoTitle: "Dover to Gatwick Taxi | Fixed Fares from Kent",
     seoDescription:
-      "Fixed-fare airport transfers from Dover, Deal, Sandwich, Folkestone and Canterbury to Gatwick, Heathrow, Stansted and Luton. Cruise terminal pickups. Book online.",
+      "Fixed-fare Dover to Gatwick taxis plus Deal, Folkestone and Canterbury to Heathrow, Stansted and Luton. Cruise pickups. Book online.",
     seoKeywords: [
       "Dover to Gatwick taxi",
       "Deal to Gatwick taxi",

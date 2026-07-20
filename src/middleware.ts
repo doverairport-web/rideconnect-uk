@@ -40,7 +40,7 @@ function rideConnectSiteConfig(
     basePath,
     publicPaths: new Set(["/"]),
     publicPrefixes: [],
-    passthroughPrefixes: [...NETWORK_PASSTHROUGH, "/contact", "/privacy"],
+    passthroughPrefixes: [...NETWORK_PASSTHROUGH, "/contact", "/privacy", "/transfers"],
   };
 }
 
@@ -51,7 +51,7 @@ const SITES: SiteConfig[] = [
     wwwHost: "www.homekent.co.uk",
     basePath: "/homekent",
     publicPaths: new Set(["/", "/contact", "/privacy"]),
-    publicPrefixes: [],
+    publicPrefixes: ["/services"],
     passthroughPrefixes: NETWORK_PASSTHROUGH,
   },
   {
@@ -66,10 +66,14 @@ const SITES: SiteConfig[] = [
       "/cruise",
       "/ferries",
       "/airports",
+      "/trains",
+      "/buses",
       "/live",
       "/visit",
       "/stay",
       "/cruise-terminal",
+      "/facebook-post",
+      "/facebook-setup",
     ],
     passthroughPrefixes: NETWORK_PASSTHROUGH,
   },

@@ -1,4 +1,5 @@
 import { HOMEKENT_SITE_URL } from "@/lib/homekent/brand";
+import { getAllHomeKentLandingPages } from "@/lib/homekent/landing-pages";
 import { isHomeKentHost } from "@/lib/homekent/paths";
 import { getAllKthArticles } from "@/lib/kenttravelhub/articles";
 import { KTH_SITE_URL } from "@/lib/kenttravelhub/brand";
@@ -11,11 +12,19 @@ import {
   isOrionTaxisHost,
   isRideConnectUkHost,
 } from "@/lib/rideconnect/host";
+import { getAllNetworkTransferPages } from "@/lib/rideconnect/transfer-pages";
 import { siteUrlForId } from "@/lib/rideconnect/sites";
 import type { MetadataRoute } from "next";
 import { headers } from "next/headers";
 
 function networkSitemap(base: string): MetadataRoute.Sitemap {
+  const transfers = getAllNetworkTransferPages().map((page) => ({
+    url: `${base}/transfers/${page.slug}`,
+    lastModified: new Date(),
+    changeFrequency: "weekly" as const,
+    priority: 0.9,
+  }));
+
   return [
     {
       url: base,
@@ -35,6 +44,7 @@ function networkSitemap(base: string): MetadataRoute.Sitemap {
       changeFrequency: "weekly",
       priority: 0.95,
     },
+    ...transfers,
     {
       url: `${base}/privacy`,
       lastModified: new Date(),
@@ -49,6 +59,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   if (isHomeKentHost(host)) {
     const base = HOMEKENT_SITE_URL.replace(/\/$/, "");
+    const services = getAllHomeKentLandingPages().map((page) => ({
+      url: `${base}/services/${page.slug}`,
+      lastModified: new Date(),
+      changeFrequency: "weekly" as const,
+      priority: 0.9,
+    }));
+
     return [
       {
         url: base,
@@ -62,6 +79,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         changeFrequency: "monthly",
         priority: 0.8,
       },
+      ...services,
       {
         url: `${base}/privacy`,
         lastModified: new Date(),

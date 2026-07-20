@@ -31,11 +31,10 @@ export function HomeKentHero() {
       <div className="relative mx-auto grid max-w-6xl gap-10 px-4 py-14 sm:px-6 lg:grid-cols-2 lg:items-center lg:py-20">
         <div>
           <h1 className="font-serif text-4xl font-bold leading-tight text-homekent-navy sm:text-5xl">
-            Professional Cleaning Services Across Kent
+            Cleaning Services in Dover &amp; East Kent
           </h1>
           <p className="mt-5 max-w-lg text-base leading-relaxed text-homekent-muted">
-            {HOMEKENT_SEO_LINE} Regular visits, deep cleans, holiday homes and
-            Airbnb changeovers — reliable, detail-focused and fully insured.
+            {HOMEKENT_SEO_LINE} Reliable, detail-focused and fully insured.
           </p>
           <div className="mt-8 flex flex-wrap gap-4">
             <a
