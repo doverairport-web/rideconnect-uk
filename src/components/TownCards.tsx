@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { mainHub, pickupHubs } from "@/lib/towns";
+import { TOWN_TAXI_LANDING_BY_ID } from "@/lib/rideconnect/transfer-pages";
 
 export function TownCards() {
   return (
@@ -42,7 +43,7 @@ export function TownCards() {
           {pickupHubs.map((town) => (
             <Link
               key={town.id}
-              href={`#${town.id}`}
+              href={TOWN_TAXI_LANDING_BY_ID[town.id] ?? `#${town.id}`}
               className="group overflow-hidden rounded-xl border border-navy/8 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
             >
               <div className="relative aspect-[4/3] overflow-hidden">

@@ -18,6 +18,9 @@ export type WebBookingInput = {
   return_trip?: boolean;
   return_mode?: "same" | "reverse";
   notes?: string;
+  source_domain?: string;
+  source_app?: string;
+  service_type?: "standard" | "airport_transfer" | "cruise_transfer";
 };
 
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID || "appp3gYwPeng1JnRG";
@@ -288,5 +291,13 @@ export function parseWebBookingBody(body: unknown): WebBookingInput | null {
     return_trip: return_trip || undefined,
     return_mode: return_trip ? return_mode ?? "same" : undefined,
     notes: asText(data.notes) || undefined,
+    source_domain: asText(data.source_domain) || asText(data.sourceDomain) || undefined,
+    source_app: asText(data.source_app) || asText(data.sourceApp) || undefined,
+    service_type:
+      asText(data.service_type) === "airport_transfer" ||
+      asText(data.service_type) === "cruise_transfer" ||
+      asText(data.service_type) === "standard"
+        ? (asText(data.service_type) as WebBookingInput["service_type"])
+        : undefined,
   };
 }

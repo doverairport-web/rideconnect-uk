@@ -1,4 +1,10 @@
 import type { CruiseArrival, CruiseCalendar, CruiseScheduleEntry } from "@/lib/kenttravelhub/content";
+import {
+  loadCruiseScheduleCache,
+  mergeCruiseScheduleEntries,
+  saveCruiseScheduleCache,
+} from "@/lib/kenttravelhub/cruise-schedule-cache";
+import { fetchCruiseaDoverToday } from "@/lib/kenttravelhub/fetchers/cruisea-dover";
 import { fetchText } from "@/lib/kenttravelhub/fetchers/http";
 
 const SCHEDULE_URL =
@@ -190,26 +196,45 @@ export async function fetchCruiseArrivals(
   date = new Date(),
 ): Promise<CruiseFeedResult> {
   const todayLabel = formatTodayLabel(date);
+  const cached = await loadCruiseScheduleCache();
   const html = await fetchText(SCHEDULE_URL);
-  if (!html) {
-    const calendar = emptyCalendar(date);
-    return { arrivals: [], calendar, source: "fallback", scheduleDate: todayLabel };
+  const parsed = html
+    ? parseScheduleRows(html)
+        .map(rowToEntry)
+        .filter((entry): entry is CruiseScheduleEntry => entry !== null)
+    : [];
+
+  let merged = mergeCruiseScheduleEntries(cached, parsed, date);
+  let source = html ? "portofdover.com" : "fallback";
+
+  const calendar = buildCalendar(merged, date);
+  if (!calendar.today.length) {
+    const cruiseaToday = await fetchCruiseaDoverToday(date);
+    if (cruiseaToday.length) {
+      merged = mergeCruiseScheduleEntries(merged, cruiseaToday, date);
+      source = html ? "portofdover.com+cruisea" : "cruisea";
+    }
   }
 
-  const entries = parseScheduleRows(html)
-    .map(rowToEntry)
-    .filter((entry): entry is CruiseScheduleEntry => entry !== null);
+  if (merged.length) {
+    await saveCruiseScheduleCache(merged).catch(() => undefined);
+  }
 
-  const calendar = buildCalendar(entries, date);
+  const finalCalendar = buildCalendar(merged, date);
+
+  if (!html && !merged.length) {
+    const empty = emptyCalendar(date);
+    return { arrivals: [], calendar: empty, source: "fallback", scheduleDate: todayLabel };
+  }
 
   return {
-    arrivals: calendar.today.map((entry) => ({
+    arrivals: finalCalendar.today.map((entry) => ({
       name: entry.name,
       time: entry.arrives,
       terminal: entry.terminal,
     })),
-    calendar,
-    source: "portofdover.com",
+    calendar: finalCalendar,
+    source,
     scheduleDate: todayLabel,
   };
 }

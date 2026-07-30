@@ -29,7 +29,11 @@ function formatCruiseToday(data: LiveTravelSnapshot): string {
   const ships = data.cruiseCalendar.today;
   if (!ships.length) return "No cruise ships in port today";
   return ships
-    .map((s) => `${s.name} ${s.time}${s.terminal ? ` (${s.terminal})` : ""}`)
+    .map((s) => {
+      const terminal = s.terminal ? ` · ${s.terminal}` : "";
+      const departs = s.departs ? ` · sails ${s.departs}` : "";
+      return `${s.name} arrives ${s.arrives}${departs}${terminal}`;
+    })
     .join(" · ");
 }
 

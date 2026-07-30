@@ -13,12 +13,18 @@ import {
   isRideConnectUkHost,
 } from "@/lib/rideconnect/host";
 import { getAllNetworkTransferPages } from "@/lib/rideconnect/transfer-pages";
-import { siteUrlForId } from "@/lib/rideconnect/sites";
+import {
+  siteUrlForId,
+  type RideConnectSiteId,
+} from "@/lib/rideconnect/sites";
 import type { MetadataRoute } from "next";
 import { headers } from "next/headers";
 
-function networkSitemap(base: string): MetadataRoute.Sitemap {
-  const transfers = getAllNetworkTransferPages().map((page) => ({
+function networkSitemap(
+  base: string,
+  siteId: RideConnectSiteId,
+): MetadataRoute.Sitemap {
+  const transfers = getAllNetworkTransferPages(siteId).map((page) => ({
     url: `${base}/transfers/${page.slug}`,
     lastModified: new Date(),
     changeFrequency: "weekly" as const,
@@ -152,20 +158,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   if (isRideConnectUkHost(host)) {
-    return networkSitemap(siteUrlForId("rideconnect"));
+    return networkSitemap(siteUrlForId("rideconnect"), "rideconnect");
   }
 
   if (isOrionTaxisHost(host)) {
-    return networkSitemap(siteUrlForId("oriontaxis"));
+    return networkSitemap(siteUrlForId("oriontaxis"), "oriontaxis");
   }
 
   if (isDoverToGatwickHost(host)) {
-    return networkSitemap(siteUrlForId("dovertogatwick"));
+    return networkSitemap(siteUrlForId("dovertogatwick"), "dovertogatwick");
   }
 
   const base = isDoverTaxiHost(host)
     ? siteUrlForId("dovertaxi")
     : siteUrlForId("dovertaxi");
 
-  return networkSitemap(base);
+  return networkSitemap(base, "dovertaxi");
 }

@@ -16,6 +16,20 @@ export function rideConnectMetadata(
   const base = site.siteUrl.replace(/\/$/, "");
   const url = path === "/" ? base : `${base}${path}`;
   const verification = googleSiteVerificationForHost(host);
+  const shareImage =
+    site.id === "dovertogatwick"
+      ? {
+          url: "/kenttravelhub/hero-dover.jpg",
+          width: 1600,
+          height: 900,
+          alt: "Dover to Gatwick taxi — White Cliffs and cruise port pickups",
+        }
+      : {
+          url: "/rideconnect-logo.png",
+          width: 1024,
+          height: 682,
+          alt: site.brandTitle,
+        };
 
   return {
     title: site.seoTitle,
@@ -30,20 +44,13 @@ export function rideConnectMetadata(
       siteName: site.brandTitle,
       locale: "en_GB",
       type: "website",
-      images: [
-        {
-          url: "/rideconnect-logo.png",
-          width: 1024,
-          height: 682,
-          alt: site.brandTitle,
-        },
-      ],
+      images: [shareImage],
     },
     twitter: {
       card: "summary_large_image",
       title: site.seoTitle,
       description: site.seoDescription,
-      images: ["/rideconnect-logo.png"],
+      images: [shareImage.url],
     },
     robots: { index: true, follow: true },
     ...(verification ? { verification: { google: verification } } : {}),

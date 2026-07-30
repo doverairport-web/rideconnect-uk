@@ -40,9 +40,9 @@ export const airports: { code: AirportCode; name: string; short: string }[] = [
   { code: "city", name: "London City", short: "City" },
 ];
 
-/** Dover district Hackney Fares — 05.03.2026 */
+/** Dover district guide fares — Gatwick promotional car fare £150 (was £191 tariff). */
 export const doverAirportFares: Record<AirportCode, AirportFare> = {
-  gatwick: { car: 191, mpv: 287 },
+  gatwick: { car: 150, mpv: 225 },
   heathrow: { car: 248, mpv: 373 },
   stansted: { car: 247, mpv: 370 },
   luton: { car: 284, mpv: 426 },

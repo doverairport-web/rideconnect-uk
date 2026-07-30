@@ -6,7 +6,9 @@ import {
   isRideConnectUkHost,
   wwwHostForSite,
 } from "@/lib/rideconnect/host";
+import { isGatwickPrimaryTransferSlug } from "@/lib/rideconnect/transfer-pages";
 import type { RideConnectSiteId } from "@/lib/rideconnect/sites";
+import { siteUrlForId } from "@/lib/rideconnect/sites";
 import { NextRequest, NextResponse } from "next/server";
 
 type SiteConfig = {
@@ -138,11 +140,26 @@ function handleSite(request: NextRequest, site: SiteConfig): NextResponse {
 export function middleware(request: NextRequest) {
   const host = request.headers.get("host");
   const hostname = host?.toLowerCase().split(":")[0] ?? "";
+  const { pathname } = request.nextUrl;
 
   if (hostname === "www.dovertaxi.co.uk") {
     const url = request.nextUrl.clone();
     url.hostname = "dovertaxi.co.uk";
     return NextResponse.redirect(url, 308);
+  }
+
+  // Consolidate Gatwick money keywords onto dovertogatwicktaxi.com (fix duplicate canonicals).
+  const transferMatch = pathname.match(/^\/transfers\/([^/]+)\/?$/);
+  if (
+    transferMatch &&
+    isGatwickPrimaryTransferSlug(transferMatch[1]) &&
+    !isDoverToGatwickHost(host)
+  ) {
+    const target = new URL(
+      `/transfers/${transferMatch[1]}`,
+      siteUrlForId("dovertogatwick"),
+    );
+    return NextResponse.redirect(target, 308);
   }
 
   for (const site of SITES) {

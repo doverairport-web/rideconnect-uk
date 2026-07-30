@@ -27,7 +27,16 @@ export const AIRPORT_QUICK_PICKUPS: QuickPlace[] = [
 export const CRUISE_QUICK_PLACES: QuickPlace[] = [
   { label: "Cruise Terminal 1", address: "Dover Cruise Terminal 1, Dover CT16 1JA" },
   { label: "Cruise Terminal 2", address: "Dover Cruise Terminal 2, Dover CT16 1JA" },
+  { label: "Dover Priory", address: "Dover Priory Station, Dover CT17 9SB" },
+  { label: "Travelodge Dover", address: "Travelodge Dover, Marine Parade, Dover CT16 1EH" },
   { label: "Dover town", address: "Dover, Kent CT16" },
+];
+
+export const LOCAL_QUICK_PLACES: QuickPlace[] = [
+  { label: "Dover Priory", address: "Dover Priory Station, Dover CT17 9SB" },
+  { label: "Travelodge Dover", address: "Travelodge Dover, Marine Parade, Dover CT16 1EH" },
+  { label: "Cruise Terminal 2", address: "Dover Cruise Terminal 2, Dover CT16 1JA" },
+  { label: "Cruise Terminal 1", address: "Dover Cruise Terminal 1, Dover CT16 1JA" },
 ];
 
 export function tripTypeFromParam(value: string | null): TripType | null {

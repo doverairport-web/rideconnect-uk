@@ -66,6 +66,24 @@ export function shouldPostTravelAlert(
   return age >= COOLDOWN_MS;
 }
 
+/** Urgent = severity alert (Brock / major disruption). */
+export function isUrgentFacebookAlert(alert: TravelAlert): boolean {
+  return alert.severity === "alert";
+}
+
+/** First urgent alert that is not in cooldown. */
+export function pickPostableTravelAlert(
+  alerts: TravelAlert[],
+  state: FacebookAlertState,
+  now = Date.now(),
+): TravelAlert | null {
+  return (
+    alerts.find(
+      (alert) => isUrgentFacebookAlert(alert) && shouldPostTravelAlert(alert, state, now),
+    ) ?? null
+  );
+}
+
 export async function loadFacebookAlertState(): Promise<FacebookAlertState> {
   return readState();
 }

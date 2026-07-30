@@ -527,7 +527,7 @@ export const KTH_SEO_ARTICLES = [
         paragraphs: [
           "A pre-booked taxi or minibus from the ferry terminal, cruise berth or Dover Priory station avoids train changes with luggage.",
           "Popular after P&O and DFDS arrivals when families want a direct run to South or North Terminal.",
-          "Fixed fares are easier to budget than metered ranks on busy port days.",
+          "Fixed fares are easier to budget than metered ranks on busy port days. For a dedicated Dover to Gatwick taxi booking with guide fares from £150, use RideConnect UK’s specialist site dovertogatwicktaxi.com.",
         ],
       },
       {

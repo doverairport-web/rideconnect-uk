@@ -11,8 +11,10 @@ export async function GET(request: Request) {
       return NextResponse.json({ ok: false, error: "Place lookup unavailable." }, { status: 503 });
     }
 
+    const selectedText = url.searchParams.get("label")?.trim() ?? "";
+
     try {
-      const resolved = await resolveGooglePlace(placeId);
+      const resolved = await resolveGooglePlace(placeId, selectedText || undefined);
       if (!resolved) {
         return NextResponse.json({ ok: false, error: "Place not found." }, { status: 404 });
       }

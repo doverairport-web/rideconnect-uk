@@ -46,19 +46,27 @@ export async function KthArticleSupplements({ article }: Props) {
               Transport partner
             </p>
             <h2 className="mt-2 font-serif text-xl font-bold text-kth-navy">
-              {KTH_POWERED_BY}
+              {article.slug === "dover-to-gatwick"
+                ? "Dover to Gatwick taxi"
+                : KTH_POWERED_BY}
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-kth-muted">
-              Kent Travel Hub is independent travel information. If you need a
-              pre-booked taxi, airport run or cruise transfer, our transport
-              partner can arrange it online across Kent.
+              {article.slug === "dover-to-gatwick"
+                ? "Kent Travel Hub is independent travel information. For a fixed-fare Dover to Gatwick taxi from £150, book with RideConnect UK on the specialist airport transfer site."
+                : "Kent Travel Hub is independent travel information. If you need a pre-booked taxi, airport run or cruise transfer, our transport partner can arrange it online across Kent."}
             </p>
-            <Link
-              href={book}
+            <a
+              href={
+                article.slug === "dover-to-gatwick"
+                  ? "https://dovertogatwicktaxi.com/transfers/dover-to-gatwick"
+                  : book
+              }
               className="mt-5 inline-flex text-sm font-semibold text-kth-navy/80 underline decoration-kth-sea/40 underline-offset-4 transition hover:text-kth-sea"
             >
-              Visit transport partner →
-            </Link>
+              {article.slug === "dover-to-gatwick"
+                ? "Book Dover to Gatwick taxi →"
+                : "Visit transport partner →"}
+            </a>
           </article>
         </div>
       </div>

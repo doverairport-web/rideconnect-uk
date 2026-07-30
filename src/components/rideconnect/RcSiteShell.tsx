@@ -1,3 +1,4 @@
+import { customerBookHrefForSite } from "@/lib/apps";
 import { ConversionTracking } from "@/components/ConversionTracking";
 import { LocalBusinessSchema } from "@/components/LocalBusinessSchema";
 import { MobileConversionBar } from "@/components/MobileConversionBar";
@@ -33,7 +34,11 @@ export async function RcSiteShell({ children }: { children: React.ReactNode }) {
           <WhatsAppButton
             message={`Hi, I'd like to book a taxi with ${site.brandTitle}.`}
           />
-          <MobileConversionBar bookHref="/book" bookLabel="Book now" />
+          <MobileConversionBar
+            bookHref={customerBookHrefForSite(site.id)}
+            bookLabel="Book now"
+            whatsappMessage={`Hi, I'd like to book a taxi with ${site.brandTitle}.`}
+          />
         </>
       )}
       <ConversionTracking />

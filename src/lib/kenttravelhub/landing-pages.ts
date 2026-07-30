@@ -87,7 +87,7 @@ export const KTH_LANDING_PAGES: KthLandingPage[] = [
     bookUtm: { campaign: "gatwick-to-dover", content: "landing" },
     highlights: [
       "North & South terminals",
-      "Guide fare from £191 (car)",
+      "Guide fare from £150 (car)",
       "Cruise & ferry connections",
     ],
     sections: [

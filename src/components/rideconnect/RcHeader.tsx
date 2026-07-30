@@ -1,11 +1,13 @@
 import Link from "next/link";
-import { customerBookUrl, passengerWebUrl } from "@/lib/apps";
+import { customerBookHrefForSite, passengerWebUrl } from "@/lib/apps";
 import { primaryPhone, telHref, whatsappHref } from "@/lib/contact";
 import type { RideConnectSiteConfig } from "@/lib/rideconnect/sites";
 import { RcLogo } from "@/components/rideconnect/RcLogo";
 
 const defaultNav = [
+  { href: "#book", label: "Book" },
   { href: "#services", label: "Services" },
+  { href: "#school-transport", label: "School runs" },
   { href: "#coverage", label: "Areas" },
   { href: "#why", label: "Why us" },
   { href: "/contact", label: "Contact" },
@@ -19,9 +21,10 @@ const doverNav = [
 ];
 
 const gatwickNav = [
+  { href: "#routes", label: "Routes" },
   { href: "#fares", label: "Fares" },
+  { href: "/transfers/dover-to-gatwick", label: "Dover → Gatwick" },
   { href: "#book", label: "Book" },
-  { href: "#app", label: "App" },
   { href: "/contact", label: "Contact" },
 ];
 
@@ -43,7 +46,12 @@ export function RcHeader({ site }: Props) {
     <header className="sticky top-0 z-50 border-b border-navy/10 bg-white/95 shadow-sm backdrop-blur">
       {site.showNetworkBanner ? (
         <div className="bg-brand-green/10 text-center text-xs font-medium text-navy">
-          <span className="px-4 py-1.5 inline-block">{site.networkBannerText}</span>
+          <a
+            href="https://rideconnectuk.com"
+            className="inline-block px-4 py-1.5 hover:text-brand-green"
+          >
+            {site.networkBannerText}
+          </a>
         </div>
       ) : null}
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
@@ -93,7 +101,7 @@ export function RcHeader({ site }: Props) {
             Passenger App
           </a>
           <Link
-            href={customerBookUrl}
+            href={customerBookHrefForSite(site.id)}
             className="rounded-full bg-brand-green px-3.5 py-2 text-sm font-semibold text-white shadow-md hover:bg-brand-green-dark sm:px-4"
           >
             Book Online

@@ -1,5 +1,7 @@
 import Image from "next/image";
+import Link from "next/link";
 import type { Destination } from "@/lib/destinations";
+import { DESTINATION_TRANSFER_HREF } from "@/lib/rideconnect/transfer-pages";
 
 type DestinationSectionProps = {
   destination: Destination;
@@ -12,6 +14,7 @@ export function DestinationSection({
 }: DestinationSectionProps) {
   const { id, title, subtitle, description, image, imageAlt, highlights } =
     destination;
+  const bookHref = DESTINATION_TRANSFER_HREF[id] ?? "/book";
 
   return (
     <article
@@ -53,12 +56,12 @@ export function DestinationSection({
               </li>
             ))}
           </ul>
-          <a
-            href="#book"
+          <Link
+            href={bookHref}
             className="mt-8 inline-flex rounded-full bg-brand-green px-6 py-3 text-sm font-semibold text-white shadow-md hover:bg-brand-green-dark"
           >
             Book this transfer
-          </a>
+          </Link>
         </div>
       </div>
     </article>

@@ -1,4 +1,19 @@
+import type { RideConnectSiteId } from "@/lib/rideconnect/sites";
+
 export const customerBookUrl = "/book";
+
+/** Homepage has inline booking form — scroll to #book instead of /book. */
+export const customerHomeBookUrl = "/#book";
+
+const HOME_INLINE_BOOK_SITES = new Set<RideConnectSiteId>([
+  "rideconnect",
+  "oriontaxis",
+  "dovertogatwick",
+]);
+
+export function customerBookHrefForSite(siteId: RideConnectSiteId): string {
+  return HOME_INLINE_BOOK_SITES.has(siteId) ? customerHomeBookUrl : customerBookUrl;
+}
 
 /** Passenger app — web/PWA until App Store listing is live. */
 export const passengerWebUrl =

@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, Suspense, useEffect, useState } from "react";
+import { FormEvent, Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   AddressField,
@@ -12,7 +12,7 @@ import {
   BookingTripAdvanced,
   BookingTripPanel,
 } from "@/components/BookingTripPanel";
-import { BRAND_NAME } from "@/lib/brand";
+import { BRAND_NAME, localDateIso } from "@/lib/brand";
 import { trackBeginCheckout, trackBookingLead } from "@/lib/analytics-client";
 import {
   trackKthBeginCheckout,
@@ -22,11 +22,16 @@ import {
   AIRPORT_QUICK_DESTINATIONS,
   AIRPORT_QUICK_PICKUPS,
   CRUISE_QUICK_PLACES,
+  LOCAL_QUICK_PLACES,
   defaultsForTripType,
   TRIP_TYPE_OPTIONS,
   tripTypeFromParam,
   type TripType,
 } from "@/lib/booking-form-presets";
+import {
+  clientBookingSource,
+  serviceTypeFromTripType,
+} from "@/lib/booking-source";
 import { requiresOnlineCardPayment } from "@/lib/booking-payment";
 import {
   primaryPhone,
@@ -97,7 +102,7 @@ function bookingSourceFromUrl(): string | undefined {
 function tomorrowIsoDate(): string {
   const d = new Date();
   d.setDate(d.getDate() + 1);
-  return d.toISOString().slice(0, 10);
+  return localDateIso(d);
 }
 
 function BookingFormInner() {
@@ -124,6 +129,15 @@ function BookingFormInner() {
   const [returnTrip, setReturnTrip] = useState(false);
   const [returnMode, setReturnMode] = useState<"same" | "reverse" | null>(null);
   const [urlPrefillDone, setUrlPrefillDone] = useState(false);
+  const [formKey, setFormKey] = useState(0);
+  const submitLockRef = useRef(false);
+  const [pickupDate, setPickupDate] = useState(tomorrowIsoDate);
+  const [pickupTime, setPickupTime] = useState("");
+  const [customerName, setCustomerName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [notes, setNotes] = useState("");
+  const [gdprAccepted, setGdprAccepted] = useState(false);
   const [formSnapshot, setFormSnapshot] = useState({
     pickup: "",
     destination: "",
@@ -146,8 +160,12 @@ function BookingFormInner() {
 
     const pickupParam = searchParams.get("pickup")?.trim();
     const destinationParam = searchParams.get("destination")?.trim();
+    const dateParam = searchParams.get("pickup_date")?.trim();
+    const timeParam = searchParams.get("pickup_time")?.trim();
     if (pickupParam) setPickup(pickupParam);
     if (destinationParam) setDestination(destinationParam);
+    if (dateParam) setPickupDate(dateParam);
+    if (timeParam) setPickupTime(timeParam);
 
     setUrlPrefillDone(true);
   }, [searchParams, urlPrefillDone]);
@@ -160,6 +178,53 @@ function BookingFormInner() {
     setLuggageSmall(0);
   }
 
+  function resetBookingForm(options?: { keepSuccessScreen?: boolean }) {
+    const defaults = defaultsForTripType("airport");
+    submitLockRef.current = false;
+    if (!options?.keepSuccessScreen) {
+      setState("idle");
+      setNeedsReview(false);
+      setConfirmationEmailSent(false);
+    }
+    setErrorMessage("");
+    setFarePreview(null);
+    setFareLoading(false);
+    setFareError("");
+    setTripType("airport");
+    setTransferDetail("");
+    setPickup("");
+    setDestination("");
+    setPickupCoord(null);
+    setDestinationCoord(null);
+    setPassengers(defaults.passengers);
+    setLuggageSmall(0);
+    setLuggageLarge(defaults.luggageLarge);
+    setPaymentMethod("cash");
+    setReturnTrip(false);
+    setReturnMode(null);
+    setPickupDate(tomorrowIsoDate());
+    setPickupTime("");
+    setCustomerName("");
+    setPhone("");
+    setEmail("");
+    setNotes("");
+    setGdprAccepted(false);
+    setFormSnapshot({
+      pickup: "",
+      destination: "",
+      pickup_coord: null,
+      destination_coord: null,
+      pickup_date: tomorrowIsoDate(),
+      pickup_time: "",
+      passengers: String(defaults.passengers),
+      luggageArticles: defaults.luggageLarge,
+      returnTrip: false,
+    });
+    if (!options?.keepSuccessScreen) {
+      setFormKey((key) => key + 1);
+    }
+  }
+
   useEffect(() => {
     setFormSnapshot((prev) => ({
       ...prev,
@@ -167,6 +232,8 @@ function BookingFormInner() {
       destination,
       pickup_coord: pickupCoord,
       destination_coord: destinationCoord,
+      pickup_date: pickupDate,
+      pickup_time: pickupTime,
       passengers: String(passengers),
       luggageArticles: luggageSmall + luggageLarge,
       returnTrip,
@@ -176,6 +243,8 @@ function BookingFormInner() {
     destination,
     pickupCoord,
     destinationCoord,
+    pickupDate,
+    pickupTime,
     passengers,
     luggageSmall,
     luggageLarge,
@@ -293,18 +362,6 @@ function BookingFormInner() {
     const nextDestination = String(data.get("destination") ?? "");
     setPickup(nextPickup);
     setDestination(nextDestination);
-    setFormSnapshot((prev) => ({
-      ...prev,
-      pickup: nextPickup,
-      destination: nextDestination,
-      pickup_coord: pickupCoord,
-      destination_coord: destinationCoord,
-      pickup_date: String(data.get("pickup_date") ?? ""),
-      pickup_time: String(data.get("pickup_time") ?? ""),
-      passengers: String(passengers),
-      luggageArticles: luggageSmall + luggageLarge,
-      returnTrip,
-    }));
   }
 
   function setQuickPickup(address: string) {
@@ -348,20 +405,21 @@ function BookingFormInner() {
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (submitLockRef.current || state === "submitting") return;
+    submitLockRef.current = true;
     setState("submitting");
     setErrorMessage("");
 
-    const form = event.currentTarget;
-    const data = new FormData(form);
-
-    if (data.get("gdpr") !== "on") {
+    if (!gdprAccepted) {
+      submitLockRef.current = false;
       setState("error");
       setErrorMessage("Please confirm we may contact you about this journey.");
       return;
     }
 
-    const email = String(data.get("email") ?? "").trim();
-    if (requiresOnlineCardPayment(paymentMethod) && !email) {
+    const trimmedEmail = email.trim();
+    if (requiresOnlineCardPayment(paymentMethod) && !trimmedEmail) {
+      submitLockRef.current = false;
       setState("error");
       setErrorMessage(
         `Email is required for card payment — add one above, choose Cash, or call ${primaryPhone}.`,
@@ -370,6 +428,7 @@ function BookingFormInner() {
     }
 
     if (requiresOnlineCardPayment(paymentMethod) && !farePreview?.fareAmount) {
+      submitLockRef.current = false;
       setState("error");
       setErrorMessage(
         `Pick addresses from the suggestions for card payment, switch to Cash, or call ${primaryPhone}.`,
@@ -377,27 +436,33 @@ function BookingFormInner() {
       return;
     }
 
+    const source = clientBookingSource();
     const payload = {
-      customer_name: String(data.get("customer_name") ?? ""),
-      phone: String(data.get("phone") ?? ""),
-      email,
-      pickup: String(data.get("pickup") ?? ""),
-      destination: String(data.get("destination") ?? ""),
-      pickup_date: String(data.get("pickup_date") ?? ""),
-      pickup_time: String(data.get("pickup_time") ?? ""),
+      customer_name: customerName.trim(),
+      phone: phone.trim(),
+      email: trimmedEmail,
+      pickup: pickup.trim(),
+      destination: destination.trim(),
+      pickup_date: pickupDate,
+      pickup_time: pickupTime,
       passengers,
       luggage_small: luggageSmall,
       luggage_large: luggageLarge,
       payment_method: paymentMethod,
       return_trip: returnTrip,
       return_mode: returnTrip ? returnMode ?? "same" : undefined,
-      notes: buildNotes(String(data.get("notes") ?? "")),
+      notes: buildNotes(notes),
       estimated_fare: farePreview?.fareAmount ?? undefined,
+      service_type: serviceTypeFromTripType(tripType),
+      source_domain: source.sourceDomain,
+      source_app: source.sourceApp,
     };
 
     try {
       const payByCard = requiresOnlineCardPayment(paymentMethod);
-      const response = await fetch(payByCard ? "/api/square/checkout" : "/api/bookings", {
+      const response = await fetch(
+        payByCard ? "/api/square/checkout" : "/api/bookings/create",
+        {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -427,21 +492,8 @@ function BookingFormInner() {
         source: bookingSourceFromUrl(),
       });
       setState("success");
-      setPickup("");
-      setDestination("");
-      setPickupCoord(null);
-      setDestinationCoord(null);
-      setTransferDetail("");
-      setPassengers(2);
-      setLuggageSmall(0);
-      setLuggageLarge(2);
-      setPaymentMethod("cash");
-      setReturnTrip(false);
-      setReturnMode(null);
-      setFarePreview(null);
-      setFareError("");
-      form.reset();
     } catch (error) {
+      submitLockRef.current = false;
       setState("error");
       const msg =
         error instanceof Error ? error.message : "Could not send your booking.";
@@ -515,7 +567,7 @@ function BookingFormInner() {
           </a>
           <button
             type="button"
-            onClick={() => setState("idle")}
+            onClick={() => resetBookingForm()}
             className="rounded-full border border-navy/15 px-5 py-2.5 text-sm font-medium text-navy hover:bg-white"
           >
             Book another journey
@@ -530,13 +582,21 @@ function BookingFormInner() {
       ? AIRPORT_QUICK_DESTINATIONS
       : tripType === "cruise"
         ? CRUISE_QUICK_PLACES
-        : [];
+        : tripType === "local"
+          ? LOCAL_QUICK_PLACES
+          : [];
 
-  const quickPickups = tripType === "airport" ? AIRPORT_QUICK_PICKUPS : [];
+  const quickPickups =
+    tripType === "airport"
+      ? AIRPORT_QUICK_PICKUPS
+      : tripType === "local"
+        ? LOCAL_QUICK_PLACES
+        : [];
 
   return (
     <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
       <form
+        key={formKey}
         onSubmit={onSubmit}
         onChange={(event) => syncFormSnapshot(event.currentTarget)}
         className="space-y-5"
@@ -579,7 +639,11 @@ function BookingFormInner() {
         {quickDestinations.length > 0 ? (
           <div className="space-y-2">
             <p className="text-xs font-medium uppercase tracking-wide text-muted">
-              {tripType === "cruise" ? "Quick location" : "Quick destination"}
+              {tripType === "cruise"
+                ? "Quick location"
+                : tripType === "local"
+                  ? "Quick place"
+                  : "Quick destination"}
             </p>
             <div className="flex flex-wrap gap-2">
               {quickDestinations.map((place) => (
@@ -587,7 +651,7 @@ function BookingFormInner() {
                   key={place.label}
                   type="button"
                   onClick={() =>
-                    tripType === "cruise" && place.label.includes("Terminal")
+                    tripType === "cruise" && /terminal/i.test(place.label)
                       ? setQuickPickup(place.address)
                       : setQuickDestination(place.address)
                   }
@@ -630,7 +694,8 @@ function BookingFormInner() {
               name="pickup_date"
               type="date"
               required
-              defaultValue={searchParams.get("pickup_date") ?? tomorrowIsoDate()}
+              value={pickupDate}
+              onChange={(event) => setPickupDate(event.target.value)}
               className={inputClass}
             />
           </label>
@@ -640,7 +705,8 @@ function BookingFormInner() {
               name="pickup_time"
               type="time"
               required
-              defaultValue={searchParams.get("pickup_time") ?? ""}
+              value={pickupTime}
+              onChange={(event) => setPickupTime(event.target.value)}
               className={inputClass}
             />
             <span className="mt-1 block text-xs font-normal text-muted">
@@ -716,6 +782,8 @@ function BookingFormInner() {
                 name="customer_name"
                 required
                 autoComplete="name"
+                value={customerName}
+                onChange={(event) => setCustomerName(event.target.value)}
                 className={inputClass}
                 placeholder="John Smith"
               />
@@ -727,6 +795,8 @@ function BookingFormInner() {
                 type="tel"
                 required
                 autoComplete="tel"
+                value={phone}
+                onChange={(event) => setPhone(event.target.value)}
                 className={inputClass}
                 placeholder="07..."
               />
@@ -737,6 +807,8 @@ function BookingFormInner() {
                 name="email"
                 type="email"
                 autoComplete="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
                 className={inputClass}
                 placeholder="For confirmation — not required"
               />
@@ -749,6 +821,8 @@ function BookingFormInner() {
           <textarea
             name="notes"
             rows={2}
+            value={notes}
+            onChange={(event) => setNotes(event.target.value)}
             className={inputClass}
             placeholder="Wheelchair, child seat, meet at arrivals hall…"
           />
@@ -759,6 +833,8 @@ function BookingFormInner() {
             name="gdpr"
             type="checkbox"
             required
+            checked={gdprAccepted}
+            onChange={(event) => setGdprAccepted(event.target.checked)}
             className="mt-1 h-4 w-4 rounded border-navy/20 text-gold focus:ring-gold"
           />
           <span>

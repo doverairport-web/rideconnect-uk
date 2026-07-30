@@ -131,6 +131,13 @@ export async function POST(request: Request) {
       amountPaid,
       sessionId: payment.id ?? payment.order_id,
     },
+    source: booking.source_domain
+      ? {
+          sourceDomain: booking.source_domain,
+          sourceApp: booking.source_app || "website/book",
+        }
+      : undefined,
+    serviceType: booking.service_type,
   });
 
   if (!result.ok) {

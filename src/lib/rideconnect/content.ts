@@ -1,24 +1,24 @@
-import { customerBookUrl, passengerWebUrl } from "@/lib/apps";
+import { passengerWebUrl } from "@/lib/apps";
 
 export const RC_SERVICES = [
   {
     id: "local",
     title: "Local Taxi",
     description: "Dover, Deal, Folkestone and Kent towns — hospital, station, port and town journeys.",
-    href: `${customerBookUrl}?type=local`,
+    href: "/transfers/deal-taxi",
   },
   {
     id: "airport",
     title: "Airport Transfers",
     description:
       "Fixed fares to Gatwick, Heathrow, Stansted, Luton and London City from Dover, Deal, Sandwich, Folkestone and Canterbury.",
-    href: `${customerBookUrl}?type=airport`,
+    href: "https://dovertogatwicktaxi.com/transfers/dover-to-gatwick",
   },
   {
     id: "cruise",
     title: "Cruise Transfers",
     description: "Dover Cruise Terminal meet-and-greet — ship-to-airport and hotel connections.",
-    href: `${customerBookUrl}?type=cruise`,
+    href: "/transfers/dover-cruise-terminal-taxi",
   },
   {
     id: "school",
@@ -30,7 +30,7 @@ export const RC_SERVICES = [
     id: "account",
     title: "Account Work",
     description: "Business and account bookings — regular routes, invoicing and dedicated dispatch support.",
-    href: "/contact",
+    href: "/transfers/corporate-staff-transfers",
   },
 ] as const;
 

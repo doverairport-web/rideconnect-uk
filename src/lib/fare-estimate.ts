@@ -5,6 +5,7 @@ import {
   parsePickupDateTime,
   type MeterBreakdown,
 } from "@/lib/meter";
+import { lookupLocalRouteFare } from "@/lib/local-route-fares";
 import { estimateRoute, type RouteMapData } from "@/lib/route-estimate";
 
 export type FareEstimateInput = {
@@ -31,6 +32,9 @@ export type FareEstimateResult = {
   source: string;
   note: string;
   map?: RouteMapData;
+  fixedRoute?: boolean;
+  fixedRouteId?: string;
+  fixedRouteLabel?: string;
 };
 
 export async function buildFareEstimate(
@@ -42,6 +46,8 @@ export async function buildFareEstimate(
   if (!pickup || !destination) {
     return { ok: false, error: "Pickup and destination are required." };
   }
+
+  const localRoute = lookupLocalRouteFare(pickup, destination);
 
   const pickupAt =
     parsePickupDateTime(input.pickup_date ?? "", input.pickup_time ?? "") ??
@@ -71,6 +77,39 @@ export async function buildFareEstimate(
     luggageArticles,
     isMpv: passengers > 4,
   });
+
+  if (localRoute) {
+    const fixedBreakdown: MeterBreakdown = {
+      ...breakdown,
+      total: localRoute.price,
+      subtotal: localRoute.price,
+      runningFare: localRoute.price,
+      baseFare: localRoute.price,
+      distanceUnits: 0,
+      timeUnits: 0,
+      runningUnits: 0,
+      sundayExtra: 0,
+      passengerExtra: 0,
+      luggageExtra: 0,
+      mpvMultiplier: 1,
+    };
+    return {
+      ok: true,
+      fare: localRoute.price,
+      fareFormatted: formatMeterFare(localRoute.price),
+      tariff: breakdown.tariff.id,
+      tariffLabel: "Fixed local route",
+      distanceMiles: Math.round((route.distanceMeters / 1609.344) * 10) / 10,
+      durationMinutes: Math.round(route.durationSeconds / 60),
+      breakdown: fixedBreakdown,
+      source: route.source,
+      map: route.map,
+      note: `Fixed fare — ${localRoute.label} · £${localRoute.price.toFixed(2)} each way`,
+      fixedRoute: true,
+      fixedRouteId: localRoute.id,
+      fixedRouteLabel: localRoute.label,
+    };
+  }
 
   return {
     ok: true,

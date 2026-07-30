@@ -1,3 +1,4 @@
+import { formatGooglePlaceLabel } from "@/lib/google-place-label";
 import { googleMapsApiKey, googleMapsServerKey, isValidGoogleMapsKey } from "@/lib/maps-config";
 import type { AddressSuggestion } from "@/lib/nominatim";
 
@@ -22,7 +23,9 @@ type AutocompleteResponse = {
 type DetailsResponse = {
   status: string;
   result?: {
+    name?: string;
     formatted_address?: string;
+    types?: string[];
     geometry?: { location?: { lat: number; lng: number } };
   };
 };
@@ -55,13 +58,16 @@ export async function searchGooglePlaces(query: string, limit = 6): Promise<Addr
   }));
 }
 
-export async function resolveGooglePlace(placeId: string): Promise<AddressSuggestion | null> {
+export async function resolveGooglePlace(
+  placeId: string,
+  selectedText?: string,
+): Promise<AddressSuggestion | null> {
   const apiKey = placesSuggestKey();
   if (!apiKey || !placeId.trim()) return null;
 
   const url = new URL("https://maps.googleapis.com/maps/api/place/details/json");
   url.searchParams.set("place_id", placeId.trim());
-  url.searchParams.set("fields", "formatted_address,geometry");
+  url.searchParams.set("fields", "name,formatted_address,geometry,types");
   url.searchParams.set("key", apiKey);
 
   const response = await fetch(url.toString(), { next: { revalidate: 86400 } });
@@ -71,11 +77,16 @@ export async function resolveGooglePlace(placeId: string): Promise<AddressSugges
   if (data.status !== "OK" || !data.result) return null;
 
   const loc = data.result.geometry?.location;
-  const address = data.result.formatted_address ?? "";
+  const label = formatGooglePlaceLabel({
+    name: data.result.name,
+    formattedAddress: data.result.formatted_address,
+    selectedText,
+    types: data.result.types,
+  });
 
   return {
-    label: address,
-    value: address,
+    label,
+    value: label,
     lat: loc?.lat,
     lng: loc?.lng,
     placeId,

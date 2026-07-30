@@ -5,8 +5,11 @@ import { TownCards } from "@/components/TownCards";
 import { TownHubSection } from "@/components/TownHubSection";
 import { RcBookSection } from "@/components/rideconnect/RcBookSection";
 import { RcHero } from "@/components/rideconnect/RcHero";
+import { RcKentPlacesStrip } from "@/components/rideconnect/RcKentPlacesStrip";
 import { RcPassengerApp } from "@/components/rideconnect/RcPassengerApp";
+import { RcPopularTransfers } from "@/components/rideconnect/RcPopularTransfers";
 import { RcSchoolTransport } from "@/components/rideconnect/RcSchoolTransport";
+import { RcTrustBar } from "@/components/rideconnect/RcTrustBar";
 import { RcVoiceBooking } from "@/components/rideconnect/RcVoiceBooking";
 import { RcWhyRideConnect } from "@/components/rideconnect/RcWhyRideConnect";
 import { destinations } from "@/lib/destinations";
@@ -19,13 +22,23 @@ export default function HomePage() {
   return (
     <>
       <RcHero site={site} />
+      <RcKentPlacesStrip
+        title="Dover first — then the rest of Kent"
+        subtitle="White Cliffs, town, Deal and Canterbury pickups for local taxis and airport transfers."
+      />
+      <RcTrustBar />
+      <RcPopularTransfers
+        title="Popular Dover taxi transfers"
+        description="Airport, cruise, ferry and East Kent town pickups — fixed guide fares online."
+      />
 
       <section id="services" className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
         <h2 className="text-2xl font-bold text-navy sm:text-3xl">
           Where are you travelling?
         </h2>
         <p className="mt-2 max-w-2xl text-muted">
-          Airport, ferry, cruise or station — choose your transfer type below.
+          Book a Dover taxi for airport, ferry, cruise or station — choose your
+          transfer below and get a fixed fare online.
         </p>
         <DestinationCards />
       </section>

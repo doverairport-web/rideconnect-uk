@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Warren Lane — school runs · June 2026</title>
+  <style>
+    :root {
+      --ink: #0f172a;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --bg: #ffffff;
+      --soft: #f8fafc;
+      --accent: #0f766e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      color: var(--ink);
+      background: var(--soft);
+      padding: 32px 20px 48px;
+    }
+    .sheet {
+      max-width: 640px;
+      margin: 0 auto;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 28px 28px 24px;
+    }
+    h1 {
+      margin: 0 0 6px;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .sub {
+      margin: 0 0 20px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 22px;
+    }
+    .stat {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 10px 12px;
+    }
+    .stat strong {
+      display: block;
+      font-size: 20px;
+      line-height: 1.2;
+    }
+    .stat span {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .stat.total strong { color: var(--accent); }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    th, td {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+    }
+    th {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    td.rate, th.rate { text-align: right; }
+    tr:nth-child(even) td { background: var(--soft); }
+    tr.one-trip td { font-weight: 600; }
+    .note { color: var(--muted); font-size: 12px; }
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 14px;
+      font-size: 13px;
+    }
+    .footer .total {
+      font-weight: 700;
+      color: var(--accent);
+      white-space: nowrap;
+    }
+    .hint {
+      max-width: 640px;
+      margin: 14px auto 0;
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+    }
+    @media print {
+      body { background: white; padding: 0; }
+      .sheet { border: none; border-radius: 0; max-width: none; padding: 0; }
+      .hint { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="sheet">
+    <h1>Warren Lane — school runs</h1>
+    <p class="sub">
+      Joseph · Warren Lane, Ewell Minnis → Dover Christchurch Academy<br />
+      June 2026 · Mon–Fri · £50/day (£25 one-way)
+    </p>
+
+    <div class="stats">
+      <div class="stat"><strong>22</strong><span>Working days</span></div>
+      <div class="stat"><strong>2</strong><span>One-trip Fridays</span></div>
+      <div class="stat total"><strong>£1,050</strong><span>Total</span></div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Day</th>
+          <th class="rate">Rate</th>
+          <th>Note</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>01.06.2026</td><td>Mon</td><td class="rate">£50</td><td class="note"></td></tr>
+        <tr><td>02.06.2026</td><td>Tue</td><td class="rate">£50</td><td class="note"></td></tr>
+        <tr><td>03.06.2026</td><td>Wed</td><td class="rate">£50</td><td class="note"></td></tr>
+        <tr><td>04.06.2026</td><td>Thu</td><td class="rate">£50</td><td class="note"></td></tr>
+        <tr class="one-trip"><td>05.06.2026</td><td>Fri</td><td class="rate">£25</td><td class="note">One trip only</td></tr>
+        <tr><td>08.06.2026</td><td>Mon</td><td class="rate">£50</td><td class="note"></td></tr>
+        <tr><td>09.06.2026</td><td>Tue</td><td class="rate">£50</td><td class="note"></td></tr>
+        <tr><td>10.06.2026</td><td>Wed</td><td class="rate">£50</td><td class="note"></td></tr>
+        <tr><td>11.06.2026</td><td>Thu</td><td class="rate">£50</td><td class="note"></td></tr>
+        <tr class="one-trip"><td>12.06.2026</td><td>Fri</td><td class="rate">£25</td><td class="note">One trip only</td></tr>
+        <tr><td>15.06.2026</td><td>Mon</td><td class="rate">£50</td><td class="note"></td></tr>
+        <tr><td>16.06.2026</td><td>Tue</td><td class="rate">£50</td><td class="note"></td></tr>
+        <tr><td>17.06.2026</td><td>Wed</td><td class="rate">£50</td><td class="note"></td></tr>
+        <tr><td>18.06.2026</td><td>Thu</td><td class="rate">£50</td><td class="note"></td></tr>
+        <tr><td>19.06.2026</td><td>Fri</td><td class="rate">£50</td><td class="note"></td></tr>
+        <tr><td>22.06.2026</td><td>Mon</td><td class="rate">£50</td><td class="note"></td></tr>
+        <tr><td>23.06.2026</td><td>Tue</td><td class="rate">£50</td><td class="note"></td></tr>
+        <tr><td>24.06.2026</td><td>Wed</td><td class="rate">£50</td><td class="note"></td></tr>
+        <tr><td>25.06.2026</td><td>Thu</td><td class="rate">£50</td><td class="note"></td></tr>
+        <tr><td>26.06.2026</td><td>Fri</td><td class="rate">£50</td><td class="note"></td></tr>
+        <tr><td>29.06.2026</td><td>Mon</td><td class="rate">£50</td><td class="note"></td></tr>
+        <tr><td>30.06.2026</td><td>Tue</td><td class="rate">£50</td><td class="note"></td></tr>
+      </tbody>
+    </table>
+
+    <div class="footer">
+      <div class="note">05.06 &amp; 12.06: one trip only (£25). All other weekdays £50.</div>
+      <div class="total">Total: £1,050</div>
+    </div>
+  </div>
+
+  <p class="hint">Press <strong>Cmd + P</strong> → choose <strong>Save as PDF</strong> to save the full page.</p>
+</body>
+</html>

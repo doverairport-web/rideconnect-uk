@@ -4,7 +4,9 @@ import {
 } from "@/lib/kenttravelhub/facebook-alert-events";
 import { formatFacebookAlertPost } from "@/lib/kenttravelhub/facebook-alert-post";
 import {
+  isUrgentFacebookAlert,
   loadFacebookAlertState,
+  pickPostableTravelAlert,
   shouldPostTravelAlert,
 } from "@/lib/kenttravelhub/facebook-alert-state";
 import { getLiveTravelSnapshot } from "@/lib/kenttravelhub/live-data";
@@ -26,9 +28,11 @@ export async function GET() {
     updatedAt: snapshot.updatedAt,
     alerts: alerts.map((alert) => ({
       ...alert,
-      wouldPost: shouldPostTravelAlert(alert, state),
+      urgent: isUrgentFacebookAlert(alert),
+      wouldPost: isUrgentFacebookAlert(alert) && shouldPostTravelAlert(alert, state),
       preview: formatFacebookAlertPost(alert),
     })),
     topAlert: pickTopTravelAlert(alerts),
+    wouldPostNow: pickPostableTravelAlert(alerts, state),
   });
 }

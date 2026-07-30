@@ -3,7 +3,11 @@ import {
   detectTravelAlerts,
   pickTopTravelAlert,
 } from "@/lib/kenttravelhub/facebook-alert-events";
-import { shouldPostTravelAlert } from "@/lib/kenttravelhub/facebook-alert-state";
+import {
+  isUrgentFacebookAlert,
+  pickPostableTravelAlert,
+  shouldPostTravelAlert,
+} from "@/lib/kenttravelhub/facebook-alert-state";
 import type { LiveTravelSnapshot } from "@/lib/kenttravelhub/content";
 
 function baseSnapshot(overrides: Partial<LiveTravelSnapshot> = {}): LiveTravelSnapshot {
@@ -62,8 +66,46 @@ describe("detectTravelAlerts", () => {
     expect(pickTopTravelAlert(alerts)?.severity).toBe("alert");
   });
 
-  it("returns empty when everything is normal", () => {
-    expect(detectTravelAlerts(baseSnapshot())).toEqual([]);
+  it("ignores warn-level port and ferry notices", () => {
+    const alerts = detectTravelAlerts(
+      baseSnapshot({
+        doverPortTraffic: {
+          label: "Port",
+          detail: "Severe weather advice",
+          severity: "warn",
+        },
+        ferryDelays: {
+          label: "Ferries",
+          detail: "Travel advice",
+          severity: "warn",
+        },
+        cruiseCalendar: {
+          today: [{ name: "Spirit of Discovery", arrives: "07:00" }],
+          tomorrow: [],
+          thisWeek: [],
+          thisMonth: [],
+          scheduleDate: "2026-07-13",
+        },
+      }),
+    );
+
+    expect(alerts).toEqual([]);
+  });
+
+  it("does not auto-alert on cruise ships alone", () => {
+    const alerts = detectTravelAlerts(
+      baseSnapshot({
+        cruiseCalendar: {
+          today: [{ name: "Seabourn Ovation", arrives: "05:30" }],
+          tomorrow: [],
+          thisWeek: [],
+          thisMonth: [],
+          scheduleDate: "2026-07-11",
+        },
+      }),
+    );
+
+    expect(alerts.some((a) => a.id === "cruise-today")).toBe(false);
   });
 });
 
@@ -81,10 +123,38 @@ describe("shouldPostTravelAlert", () => {
         "m20-traffic": {
           fingerprint: "same",
           severity: "warn" as const,
-          postedAt: new Date().toISOString(),
+          postedAt: new Date(Date.now() - 13 * 60 * 60 * 1000).toISOString(),
         },
       },
+      lastPostedAt: new Date(Date.now() - 7 * 60 * 60 * 1000).toISOString(),
     };
     expect(shouldPostTravelAlert(alert, state)).toBe(true);
+  });
+
+  it("blocks repeat posts within global 6 hour window", () => {
+    const alert = {
+      id: "ferry-delays",
+      severity: "alert" as const,
+      title: "Ferries",
+      detail: "Delay",
+      fingerprint: "new",
+    };
+    const state = {
+      alerts: {},
+      lastPostedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    };
+    expect(shouldPostTravelAlert(alert, state)).toBe(false);
+  });
+
+  it("skips warn-level alerts for Facebook autopost", () => {
+    const warn = {
+      id: "port-traffic",
+      severity: "warn" as const,
+      title: "Port",
+      detail: "Busy",
+      fingerprint: "a",
+    };
+    expect(isUrgentFacebookAlert(warn)).toBe(false);
+    expect(pickPostableTravelAlert([warn], { alerts: {} })).toBeNull();
   });
 });

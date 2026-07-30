@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useMapsLibrary } from "@vis.gl/react-google-maps";
+import { formatGooglePlaceLabel } from "@/lib/google-place-label";
 import { hasGoogleMaps } from "@/lib/maps-config";
 
 type AddressAutocompleteProps = {
@@ -29,7 +30,7 @@ export function AddressAutocomplete({
 
     const autocomplete = new places.Autocomplete(inputRef.current, {
       componentRestrictions: { country: "gb" },
-      fields: ["formatted_address", "name", "geometry"],
+      fields: ["formatted_address", "name", "geometry", "types"],
       bounds: new google.maps.LatLngBounds(
         { lat: 51.0, lng: 1.2 },
         { lat: 51.2, lng: 1.45 },
@@ -39,11 +40,16 @@ export function AddressAutocomplete({
 
     const listener = autocomplete.addListener("place_changed", () => {
       const place = autocomplete.getPlace();
-      const address =
-        place.formatted_address || place.name || inputRef.current?.value || "";
       const loc = place.geometry?.location;
-      const coords = loc ? { lat: loc.lat(), lng: loc.lng() } : null;
-      onChange(address, coords);
+      if (!loc) return;
+
+      const address = formatGooglePlaceLabel({
+        name: place.name,
+        formattedAddress: place.formatted_address,
+        selectedText: inputRef.current?.value,
+        types: place.types,
+      });
+      onChange(address, { lat: loc.lat(), lng: loc.lng() });
     });
 
     return () => {

@@ -1,5 +1,7 @@
 import Image from "next/image";
+import Link from "next/link";
 import type { Town } from "@/lib/towns";
+import { TOWN_TAXI_LANDING_BY_ID } from "@/lib/rideconnect/transfer-pages";
 
 type TownHubSectionProps = {
   town: Town;
@@ -8,6 +10,7 @@ type TownHubSectionProps = {
 
 export function TownHubSection({ town, reverse = false }: TownHubSectionProps) {
   const { id, title, subtitle, description, image, imageAlt, highlights } = town;
+  const transferHref = TOWN_TAXI_LANDING_BY_ID[id] ?? "/book?type=airport";
 
   return (
     <article
@@ -49,12 +52,12 @@ export function TownHubSection({ town, reverse = false }: TownHubSectionProps) {
               </li>
             ))}
           </ul>
-          <a
-            href="#book"
+          <Link
+            href={transferHref}
             className="mt-6 inline-flex rounded-full border border-brand-green bg-white px-5 py-2.5 text-sm font-semibold text-brand-green hover:bg-brand-green hover:text-white"
           >
             Book Airport Transfer from {title}
-          </a>
+          </Link>
         </div>
       </div>
     </article>

@@ -57,10 +57,13 @@ export function AddressSuggestField({
     }
   }
 
-  async function resolvePlaceId(placeId: string): Promise<Suggestion | null> {
+  async function resolvePlaceId(
+    placeId: string,
+    selectedLabel: string,
+  ): Promise<Suggestion | null> {
     try {
       const response = await fetch(
-        `/api/address-suggest?place_id=${encodeURIComponent(placeId)}`,
+        `/api/address-suggest?place_id=${encodeURIComponent(placeId)}&label=${encodeURIComponent(selectedLabel)}`,
       );
       const result = await response.json();
       if (response.ok && result.ok && result.suggestion) {
@@ -100,20 +103,26 @@ export function AddressSuggestField({
 
   function chooseSuggestion(suggestion: Suggestion) {
     void (async () => {
-      let resolved = suggestion;
+      const selectedLabel = suggestion.label.trim() || suggestion.value.trim();
+      let displayValue = selectedLabel;
+      let coords: { lat: number; lng: number } | null = null;
+
       if (
-        (resolved.lat == null || resolved.lng == null) &&
-        resolved.placeId
+        (suggestion.lat == null || suggestion.lng == null) &&
+        suggestion.placeId
       ) {
-        const lookedUp = await resolvePlaceId(resolved.placeId);
-        if (lookedUp) resolved = lookedUp;
+        const lookedUp = await resolvePlaceId(suggestion.placeId, selectedLabel);
+        if (lookedUp) {
+          displayValue = lookedUp.value.trim() || selectedLabel;
+          if (lookedUp.lat != null && lookedUp.lng != null) {
+            coords = { lat: lookedUp.lat, lng: lookedUp.lng };
+          }
+        }
+      } else if (suggestion.lat != null && suggestion.lng != null) {
+        coords = { lat: suggestion.lat, lng: suggestion.lng };
       }
 
-      const coords =
-        resolved.lat != null && resolved.lng != null
-          ? { lat: resolved.lat, lng: resolved.lng }
-          : null;
-      onChange(resolved.value, coords);
+      onChange(displayValue, coords);
       setOpen(false);
       setSuggestions([]);
     })();

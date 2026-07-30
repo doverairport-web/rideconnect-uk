@@ -1,6 +1,11 @@
 import Link from "next/link";
 import { FareGuideTables } from "@/components/FareGuideTables";
 import {
+  DESTINATION_TRANSFER_HREF,
+  GATWICK_TRANSFER_BY_TOWN,
+  TOWN_TAXI_LANDING_BY_ID,
+} from "@/lib/rideconnect/transfer-pages";
+import {
   airports,
   fareCategories,
   formatFareCell,
@@ -16,6 +21,20 @@ const fareNav = [
   { href: "#fares-attractions", label: "Attractions" },
   { href: "#fares-retail", label: "Shopping" },
 ];
+
+function townHref(townId: string): string {
+  return TOWN_TAXI_LANDING_BY_ID[townId] ?? `#${townId}`;
+}
+
+function airportCellHref(townId: string, airportCode: string): string | null {
+  if (airportCode === "gatwick" && GATWICK_TRANSFER_BY_TOWN[townId]) {
+    return GATWICK_TRANSFER_BY_TOWN[townId];
+  }
+  if (airportCode === "heathrow" && townId === "dover") {
+    return DESTINATION_TRANSFER_HREF.airport;
+  }
+  return null;
+}
 
 export function AirportPricing() {
   return (
@@ -52,7 +71,7 @@ export function AirportPricing() {
                 >
                   <td className="px-4 py-3 font-medium text-navy">
                     <Link
-                      href={`#${row.id}`}
+                      href={townHref(row.id)}
                       className="hover:text-brand-green"
                     >
                       {row.town}
@@ -65,15 +84,27 @@ export function AirportPricing() {
                   </td>
                   {airports.map((airport) => {
                     const fare = formatFareCell(row.prices[airport.code]);
+                    const href = airportCellHref(row.id, airport.code);
+                    const priceBlock = (
+                      <>
+                        <span className="font-semibold text-navy">{fare.car}</span>
+                        {fare.mpv ? (
+                          <span className="block text-xs text-muted">{fare.mpv}</span>
+                        ) : null}
+                      </>
+                    );
                     return (
                       <td
                         key={airport.code}
                         className="whitespace-nowrap px-3 py-3 text-navy/90"
                       >
-                        <span className="font-semibold text-navy">{fare.car}</span>
-                        {fare.mpv ? (
-                          <span className="block text-xs text-muted">{fare.mpv}</span>
-                        ) : null}
+                        {href ? (
+                          <Link href={href} className="hover:text-brand-green">
+                            {priceBlock}
+                          </Link>
+                        ) : (
+                          priceBlock
+                        )}
                       </td>
                     );
                   })}
@@ -90,14 +121,26 @@ export function AirportPricing() {
           <div className="rounded-xl border border-navy/8 bg-cream p-4 text-sm text-muted">
             <p className="font-medium text-navy">Gatwick terminals</p>
             <p className="mt-1">
-              South: CAR £191 / MPV £287. North: CAR £196 / MPV £294.
+              South: CAR £150 / MPV £225. North: CAR £150 / MPV £225.{" "}
+              <a
+                href="https://dovertogatwicktaxi.com/transfers/dover-to-gatwick"
+                className="font-semibold text-brand-green hover:underline"
+              >
+                Dover to Gatwick →
+              </a>
             </p>
           </div>
           <div className="rounded-xl border border-navy/8 bg-cream p-4 text-sm text-muted">
             <p className="font-medium text-navy">Heathrow terminals</p>
             <p className="mt-1">
               From CAR £248 / MPV £373 (T4 &amp; T5). T1–T3 up to CAR £255 / MPV
-              £383.
+              £383.{" "}
+              <Link
+                href="/transfers/dover-to-heathrow"
+                className="font-semibold text-brand-green hover:underline"
+              >
+                Dover to Heathrow →
+              </Link>
             </p>
           </div>
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
@@ -129,12 +172,12 @@ export function AirportPricing() {
           district boundary must be agreed between driver and hirer prior to hire.
         </p>
 
-        <a
-          href="#book"
+        <Link
+          href="/book?type=airport&pickup=Dover%2C%20Kent%20CT16"
           className="mt-8 inline-flex rounded-full bg-brand-green px-6 py-3 text-sm font-semibold text-white shadow-md hover:bg-brand-green-dark"
         >
           Book online — confirm your fare
-        </a>
+        </Link>
       </div>
     </section>
   );

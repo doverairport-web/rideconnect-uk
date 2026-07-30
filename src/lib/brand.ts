@@ -15,4 +15,9 @@ export function siteHost(): string {
   }
 }
 
+/** Local calendar date (YYYY-MM-DD) — never use toISOString() for booking pickup dates. */
+export function localDateIso(date = new Date()): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
 export const DEFAULT_EMAIL = email;

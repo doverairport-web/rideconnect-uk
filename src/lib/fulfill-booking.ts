@@ -62,17 +62,25 @@ export async function fulfillWebBooking(
   let estimatedFare = options?.estimatedFare ?? null;
 
   if (estimatedFare == null) {
-    const fareResult = await buildFareEstimate({
-      pickup: booking.pickup,
-      destination: booking.destination,
-      pickup_date: booking.pickup_date,
-      pickup_time: booking.pickup_time,
-      passengers: booking.passengers,
-      luggageArticles: (booking.luggage_small ?? 0) + (booking.luggage_large ?? 0),
-      luggage: booking.luggage,
-    });
-    if (fareResult.ok) {
-      estimatedFare = fareResult.fare;
+    try {
+      const fareResult = await buildFareEstimate({
+        pickup: booking.pickup,
+        destination: booking.destination,
+        pickup_date: booking.pickup_date,
+        pickup_time: booking.pickup_time,
+        passengers: booking.passengers,
+        luggageArticles: (booking.luggage_small ?? 0) + (booking.luggage_large ?? 0),
+        luggage: booking.luggage,
+      });
+      if (fareResult.ok) {
+        estimatedFare = fareResult.fare;
+      }
+    } catch (error) {
+      // Never block fulfill/save for fare estimate failures (esp. after Square charge).
+      console.error(
+        "[booking-fulfill] Fare estimate failed (continuing without estimate):",
+        error instanceof Error ? error.message : error,
+      );
     }
   }
 
