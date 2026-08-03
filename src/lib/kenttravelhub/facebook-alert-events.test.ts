@@ -66,7 +66,7 @@ describe("detectTravelAlerts", () => {
     expect(pickTopTravelAlert(alerts)?.severity).toBe("alert");
   });
 
-  it("ignores warn-level port and ferry notices", () => {
+  it("detects warn-level port and ferry notices without treating them as urgent", () => {
     const alerts = detectTravelAlerts(
       baseSnapshot({
         doverPortTraffic: {
@@ -80,7 +80,17 @@ describe("detectTravelAlerts", () => {
           severity: "warn",
         },
         cruiseCalendar: {
-          today: [{ name: "Spirit of Discovery", arrives: "07:00" }],
+          today: [
+            {
+              name: "Spirit of Discovery",
+              line: "Saga",
+              arrives: "07:00",
+              departs: "17:00",
+              terminal: "CT2",
+              date: "2026-07-13",
+              dateLabel: "Mon 13 Jul",
+            },
+          ],
           tomorrow: [],
           thisWeek: [],
           thisMonth: [],
@@ -89,14 +99,31 @@ describe("detectTravelAlerts", () => {
       }),
     );
 
-    expect(alerts).toEqual([]);
+    expect(alerts.some((a) => a.id === "port-traffic" && a.severity === "warn")).toBe(
+      true,
+    );
+    expect(alerts.some((a) => a.id === "ferry-delays" && a.severity === "warn")).toBe(
+      true,
+    );
+    expect(alerts.every((a) => a.severity === "warn")).toBe(true);
+    expect(pickPostableTravelAlert(alerts, { alerts: {} })).toBeNull();
   });
 
   it("does not auto-alert on cruise ships alone", () => {
     const alerts = detectTravelAlerts(
       baseSnapshot({
         cruiseCalendar: {
-          today: [{ name: "Seabourn Ovation", arrives: "05:30" }],
+          today: [
+            {
+              name: "Seabourn Ovation",
+              line: "Seabourn",
+              arrives: "05:30",
+              departs: "16:00",
+              terminal: "CT1",
+              date: "2026-07-11",
+              dateLabel: "Sat 11 Jul",
+            },
+          ],
           tomorrow: [],
           thisWeek: [],
           thisMonth: [],
@@ -126,22 +153,26 @@ describe("shouldPostTravelAlert", () => {
           postedAt: new Date(Date.now() - 13 * 60 * 60 * 1000).toISOString(),
         },
       },
-      lastPostedAt: new Date(Date.now() - 7 * 60 * 60 * 1000).toISOString(),
     };
     expect(shouldPostTravelAlert(alert, state)).toBe(true);
   });
 
-  it("blocks repeat posts within global 6 hour window", () => {
+  it("blocks repeat posts within per-alert 4 hour cooldown", () => {
     const alert = {
       id: "ferry-delays",
       severity: "alert" as const,
       title: "Ferries",
       detail: "Delay",
-      fingerprint: "new",
+      fingerprint: "same",
     };
     const state = {
-      alerts: {},
-      lastPostedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+      alerts: {
+        "ferry-delays": {
+          fingerprint: "same",
+          severity: "alert" as const,
+          postedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+        },
+      },
     };
     expect(shouldPostTravelAlert(alert, state)).toBe(false);
   });
