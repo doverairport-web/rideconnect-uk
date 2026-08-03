@@ -1,0 +1,126 @@
+@import "tailwindcss";
+
+:root {
+  --brand-blue: #1a4d8c;
+  --brand-blue-light: #2563a8;
+  --brand-green: #2eae4e;
+  --brand-green-dark: #248f3f;
+  --brand-orange: #f5a623;
+  --navy: var(--brand-blue);
+  --navy-light: var(--brand-blue-light);
+  --gold: var(--brand-green);
+  --gold-dark: var(--brand-green-dark);
+  --cream: #f7f9fc;
+  --muted: #5c6b7a;
+}
+
+@theme inline {
+  --color-brand-blue: var(--brand-blue);
+  --color-brand-blue-light: var(--brand-blue-light);
+  --color-brand-green: var(--brand-green);
+  --color-brand-green-dark: var(--brand-green-dark);
+  --color-brand-orange: var(--brand-orange);
+  --color-navy: var(--navy);
+  --color-navy-light: var(--navy-light);
+  --color-gold: var(--gold);
+  --color-gold-dark: var(--gold-dark);
+  --color-cream: var(--cream);
+  --color-muted: var(--muted);
+  --color-homekent-navy: #1b2b4b;
+  --color-homekent-gold: #c9a227;
+  --color-homekent-gold-light: #dbb94a;
+  --color-homekent-cream: #f8f7f4;
+  --color-homekent-muted: #5c6478;
+  --color-kth-navy: #0b2545;
+  --color-kth-navy-light: #163a63;
+  --color-kth-sea: #1a6b7a;
+  --color-kth-sand: #f4f6f8;
+  --color-kth-muted: #5a6b7a;
+  --color-kth-gold: #f5a623;
+  --color-kth-gold-dark: #e09410;
+  --color-kth-accent: var(--color-kth-gold);
+  --color-kth-accent-dark: var(--color-kth-gold-dark);
+  --font-sans: var(--font-geist-sans);
+  --font-serif: var(--font-homekent-serif), Georgia, "Times New Roman", serif;
+}
+
+body {
+  background: var(--cream);
+  color: var(--navy);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+.homekent {
+  --font-homekent-serif: var(--font-homekent-serif);
+}
+
+.homekent .font-serif {
+  font-family: var(--font-serif);
+}
+
+.kenttravelhub {
+  --font-kth-serif: var(--font-kth-serif);
+}
+
+.kenttravelhub .font-serif {
+  font-family: var(--font-kth-serif), Georgia, "Times New Roman", serif;
+}
+
+.kenttravelhub .kth-article-prose p + p {
+  margin-top: 0;
+}
+
+.kenttravelhub .kth-article-prose h2 + p {
+  margin-top: 0;
+}
+
+.kenttravelhub .kth-ticker-track {
+  animation: kth-ticker-scroll 120s linear infinite;
+}
+
+.kenttravelhub .kth-ticker-track:hover {
+  animation-play-state: paused;
+}
+
+@keyframes kth-ticker-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kenttravelhub .kth-ticker-track {
+    animation: none;
+    flex-wrap: wrap;
+    width: 100%;
+    gap: 0.75rem;
+  }
+
+  .kenttravelhub .kth-port-ticker-track {
+    animation: none;
+  }
+}
+
+.kenttravelhub .kth-port-ticker-track {
+  animation: kth-port-ticker-up 36s linear infinite;
+}
+
+.kenttravelhub .kth-port-ticker-track:hover {
+  animation-play-state: paused;
+}
+
+@keyframes kth-port-ticker-up {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+.safe-area-pb {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}
