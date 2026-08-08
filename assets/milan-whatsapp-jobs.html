@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Milan — job notes from WhatsApp</title>
+  <style>
+    :root {
+      --ink: #0f172a;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --bg: #ffffff;
+      --soft: #f8fafc;
+      --accent: #0f766e;
+      --warn: #b45309;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      color: var(--ink);
+      background: var(--soft);
+      padding: 32px 20px 48px;
+    }
+    .sheet {
+      max-width: 720px;
+      margin: 0 auto;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 28px 28px 24px;
+    }
+    h1 {
+      margin: 0 0 6px;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .sub {
+      margin: 0 0 20px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 22px;
+    }
+    .stat {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 10px 12px;
+    }
+    .stat strong {
+      display: block;
+      font-size: 20px;
+      line-height: 1.2;
+    }
+    .stat span {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .stat.total strong { color: var(--accent); }
+    h2 {
+      margin: 18px 0 10px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    h2:first-of-type { margin-top: 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+    th, td {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    td.num, th.num, td.rate, th.rate { text-align: right; white-space: nowrap; }
+    tr:nth-child(even) td { background: var(--soft); }
+    .tbd { color: var(--warn); font-weight: 600; }
+    .note { color: var(--muted); font-size: 12px; line-height: 1.45; }
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 14px;
+      font-size: 13px;
+    }
+    .footer .total {
+      font-weight: 700;
+      color: var(--accent);
+      white-space: nowrap;
+    }
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+      background: var(--soft);
+    }
+    .card h3 {
+      margin: 0 0 6px;
+      font-size: 14px;
+    }
+    .card p {
+      margin: 0 0 6px;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .card .price {
+      margin: 8px 0 0;
+      font-weight: 700;
+      color: var(--accent);
+      font-size: 14px;
+    }
+    .hint {
+      max-width: 720px;
+      margin: 14px auto 0;
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+    }
+    @media print {
+      body { background: white; padding: 0; }
+      .sheet { border: none; border-radius: 0; max-width: none; padding: 0; }
+      .hint { display: none; }
+      .card { background: white; }
+    }
+  </style>
+</head>
+<body>
+  <div class="sheet">
+    <h1>Milan — WhatsApp job notes</h1>
+    <p class="sub">
+      Driver: Milan (Isle of Sheppey boy)<br />
+      Counts from WhatsApp · school run rates from job cards / dispatch
+    </p>
+
+    <div class="stats">
+      <div class="stat"><strong>£325</strong><span>Westbury priced</span></div>
+      <div class="stat"><strong>£55 / £45</strong><span>One way · ×2 back</span></div>
+      <div class="stat total"><strong>TBD</strong><span>Full total</span></div>
+    </div>
+
+    <h2>1. WhatsApp counts</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Job</th>
+          <th>Qty</th>
+          <th class="rate">Unit</th>
+          <th class="rate">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>47 Cockering Rd → St Nicholas school</td>
+          <td>1×</td>
+          <td class="rate tbd">TBD</td>
+          <td class="rate tbd">TBD</td>
+        </tr>
+        <tr>
+          <td>Westbury Heights / Little Acorns (PA @ 07:20)</td>
+          <td>2× full + 1× morning</td>
+          <td class="rate">£65 / way</td>
+          <td class="rate">£325</td>
+        </tr>
+        <tr>
+          <td>Account — Charlton Centre → Whitfield (disabled passenger)</td>
+          <td>1× morning</td>
+          <td class="rate tbd">TBD</td>
+          <td class="rate tbd">TBD</td>
+        </tr>
+        <tr>
+          <td>Holiday Inn — transit runs</td>
+          <td>5×</td>
+          <td class="rate tbd">TBD</td>
+          <td class="rate tbd">TBD</td>
+        </tr>
+        <tr>
+          <td>Isle of Sheppey</td>
+          <td>1×</td>
+          <td class="rate tbd">TBD</td>
+          <td class="rate tbd">TBD</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="note">Westbury: 2 × £130 + 1 × £65 = £325</p>
+
+    <h2>2. School run cards (added)</h2>
+
+    <div class="card">
+      <h3>EKC Broadstairs — Oliver &amp; Michael</h3>
+      <p>
+        Oliver — 8 Kimberley Walk, Dover CT16 2JN · Michael — 23 Albert Road, Dover CT16 1RD →
+        East Kent College Broadstairs CT10 1PN · 07:50 / 14:40 · child lock on door
+      </p>
+      <p class="price">£55 one way · £110 there &amp; back</p>
+    </div>
+
+    <div class="card">
+      <h3>Simon Langton Canterbury — Sarah, Hudson, Sam &amp; Zac</h3>
+      <p>
+        Sarah — 54 George Street, Dover CT17 0EG @ 07:35–07:40 ·
+        Hudson — 13 Elysium Park Close, Whitfield CT16 2FJ ·
+        Sam &amp; Zac — The Coach House, Petts Bottom, Canterbury CT4 5PB →
+        Simon Langton School, Canterbury · 08:30 / 15:50
+      </p>
+      <p class="note">Sarah: mornings only.</p>
+      <p class="price">£45 one way · £90 there &amp; back</p>
+    </div>
+
+    <div class="footer">
+      <div class="note">
+        Send how many EKC / Langton trips Milan did, and rates for Cockering, Charlton, Holiday Inn and Isle of Sheppey (1×).
+      </div>
+      <div class="total">Known: £325</div>
+    </div>
+  </div>
+
+  <p class="hint">Press <strong>Cmd + P</strong> → <strong>Save as PDF</strong>.</p>
+</body>
+</html>

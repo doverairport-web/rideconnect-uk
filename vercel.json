@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/kenttravelhub/facebook/post-live",
+      "schedule": "0 6,11,16,19 * * *"
+    },
+    {
+      "path": "/api/kenttravelhub/facebook/post-alert",
+      "schedule": "*/30 * * * *"
+    }
+  ]
+}
