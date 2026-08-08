@@ -28,7 +28,7 @@ function isPublicPath(pathname: string, site: SiteConfig): boolean {
   );
 }
 
-const NETWORK_PASSTHROUGH = ["/book", "/driver", "/platform", "/private"];
+const NETWORK_PASSTHROUGH = ["/book", "/driver", "/platform", "/private", "/seo"];
 
 function rideConnectSiteConfig(
   id: RideConnectSiteId,
