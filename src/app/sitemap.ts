@@ -1,7 +1,7 @@
 import { HOMEKENT_SITE_URL } from "@/lib/homekent/brand";
 import { getAllHomeKentLandingPages } from "@/lib/homekent/landing-pages";
 import { isHomeKentHost } from "@/lib/homekent/paths";
-import { getAllKthArticles } from "@/lib/kenttravelhub/articles";
+import { getIndexableKthArticles } from "@/lib/kenttravelhub/articles";
 import { KTH_SITE_URL } from "@/lib/kenttravelhub/brand";
 import { isKentTravelHubHost } from "@/lib/kenttravelhub/host";
 import { getAllKthLandingPages } from "@/lib/kenttravelhub/landing-pages";
@@ -97,7 +97,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   if (isKentTravelHubHost(host)) {
     const base = KTH_SITE_URL.replace(/\/$/, "");
-    const articles = getAllKthArticles();
+    // Exclude redirected article slugs (e.g. /news/dover-cruise-terminal-guide → /cruise-terminal).
+    const articles = getIndexableKthArticles();
     const landingPages = getAllKthLandingPages();
     return [
       {
@@ -142,12 +143,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         changeFrequency: "monthly",
         priority: 0.8,
       },
-      {
-        url: `${base}/book`,
-        lastModified: new Date(),
-        changeFrequency: "weekly",
-        priority: 0.95,
-      },
+      // Do NOT list /book here — on KTH it is a taxi-network passthrough and must
+      // not publish a Kent Travel Hub indexable booking URL (canonical belongs on taxi brand).
       {
         url: `${base}/privacy`,
         lastModified: new Date(),

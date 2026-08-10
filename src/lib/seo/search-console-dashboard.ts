@@ -1,11 +1,14 @@
+import {
+  googleSiteVerificationDoverTaxi,
+  googleSiteVerificationGatwick,
+  googleSiteVerificationHomeKent,
+  googleSiteVerificationKentTravelHub,
+  googleSiteVerificationOrion,
+  googleSiteVerificationRideConnect,
+} from "@/lib/search-console";
 import { HOMEKENT_SITE_URL } from "@/lib/homekent/brand";
 import { KTH_SITE_URL } from "@/lib/kenttravelhub/brand";
 import { siteUrlForId } from "@/lib/rideconnect/sites";
-import {
-  googleSiteVerificationDover,
-  googleSiteVerificationHomeKent,
-  googleSiteVerificationKentTravelHub,
-} from "@/lib/search-console";
 
 export type SearchConsoleSiteStatus = {
   id: string;
@@ -32,7 +35,10 @@ function trimUrl(url: string): string {
 }
 
 export function getSearchConsoleDashboardSites(): SearchConsoleSiteStatus[] {
-  const dover = googleSiteVerificationDover();
+  const rideconnect = googleSiteVerificationRideConnect();
+  const dovertaxi = googleSiteVerificationDoverTaxi();
+  const orion = googleSiteVerificationOrion();
+  const gatwick = googleSiteVerificationGatwick();
   const homekent = googleSiteVerificationHomeKent();
   const kth = googleSiteVerificationKentTravelHub();
 
@@ -40,10 +46,10 @@ export function getSearchConsoleDashboardSites(): SearchConsoleSiteStatus[] {
   const gaKth =
     process.env.NEXT_PUBLIC_KTH_GA_MEASUREMENT_ID?.trim() || gaDefault;
 
-  const rideconnect = trimUrl(siteUrlForId("rideconnect"));
-  const dovertaxi = trimUrl(siteUrlForId("dovertaxi"));
-  const orion = trimUrl(siteUrlForId("oriontaxis"));
-  const gatwick = trimUrl(siteUrlForId("dovertogatwick"));
+  const rideconnectUrl = trimUrl(siteUrlForId("rideconnect"));
+  const dovertaxiUrl = trimUrl(siteUrlForId("dovertaxi"));
+  const orionUrl = trimUrl(siteUrlForId("oriontaxis"));
+  const gatwickUrl = trimUrl(siteUrlForId("dovertogatwick"));
   const homekentUrl = trimUrl(HOMEKENT_SITE_URL);
   const kthUrl = trimUrl(KTH_SITE_URL);
 
@@ -51,54 +57,54 @@ export function getSearchConsoleDashboardSites(): SearchConsoleSiteStatus[] {
     {
       id: "rideconnect",
       name: "RideConnect UK",
-      siteUrl: rideconnect,
-      sitemapUrl: `${rideconnect}/sitemap.xml`,
-      verificationEnv: "GOOGLE_SITE_VERIFICATION",
-      verificationConfigured: Boolean(dover),
-      verificationPreview: maskCode(dover),
+      siteUrl: rideconnectUrl,
+      sitemapUrl: `${rideconnectUrl}/sitemap.xml`,
+      verificationEnv: "RIDECONNECT_GOOGLE_SITE_VERIFICATION",
+      verificationConfigured: Boolean(rideconnect),
+      verificationPreview: maskCode(rideconnect),
       gaEnv: "NEXT_PUBLIC_GA_MEASUREMENT_ID",
       gaConfigured: Boolean(gaDefault),
       gaId: gaDefault,
-      searchConsoleUrl: `https://search.google.com/search-console?resource_id=${encodeURIComponent(`sc-domain:${new URL(rideconnect).hostname}`)}`,
+      searchConsoleUrl: `https://search.google.com/search-console?resource_id=${encodeURIComponent(`sc-domain:${new URL(rideconnectUrl).hostname}`)}`,
     },
     {
       id: "dovertaxi",
       name: "Dover Taxi",
-      siteUrl: dovertaxi,
-      sitemapUrl: `${dovertaxi}/sitemap.xml`,
-      verificationEnv: "GOOGLE_SITE_VERIFICATION",
-      verificationConfigured: Boolean(dover),
-      verificationPreview: maskCode(dover),
+      siteUrl: dovertaxiUrl,
+      sitemapUrl: `${dovertaxiUrl}/sitemap.xml`,
+      verificationEnv: "DOVERTAXI_GOOGLE_SITE_VERIFICATION",
+      verificationConfigured: Boolean(dovertaxi),
+      verificationPreview: maskCode(dovertaxi),
       gaEnv: "NEXT_PUBLIC_GA_MEASUREMENT_ID",
       gaConfigured: Boolean(gaDefault),
       gaId: gaDefault,
-      searchConsoleUrl: `https://search.google.com/search-console?resource_id=${encodeURIComponent(dovertaxi)}`,
+      searchConsoleUrl: `https://search.google.com/search-console?resource_id=${encodeURIComponent(dovertaxiUrl)}`,
     },
     {
       id: "oriontaxis",
       name: "Orion Taxis",
-      siteUrl: orion,
-      sitemapUrl: `${orion}/sitemap.xml`,
-      verificationEnv: "GOOGLE_SITE_VERIFICATION",
-      verificationConfigured: Boolean(dover),
-      verificationPreview: maskCode(dover),
+      siteUrl: orionUrl,
+      sitemapUrl: `${orionUrl}/sitemap.xml`,
+      verificationEnv: "ORION_GOOGLE_SITE_VERIFICATION",
+      verificationConfigured: Boolean(orion),
+      verificationPreview: maskCode(orion),
       gaEnv: "NEXT_PUBLIC_GA_MEASUREMENT_ID",
       gaConfigured: Boolean(gaDefault),
       gaId: gaDefault,
-      searchConsoleUrl: `https://search.google.com/search-console?resource_id=${encodeURIComponent(orion)}`,
+      searchConsoleUrl: `https://search.google.com/search-console?resource_id=${encodeURIComponent(orionUrl)}`,
     },
     {
       id: "dovertogatwick",
       name: "Dover to Gatwick",
-      siteUrl: gatwick,
-      sitemapUrl: `${gatwick}/sitemap.xml`,
-      verificationEnv: "GOOGLE_SITE_VERIFICATION",
-      verificationConfigured: Boolean(dover),
-      verificationPreview: maskCode(dover),
+      siteUrl: gatwickUrl,
+      sitemapUrl: `${gatwickUrl}/sitemap.xml`,
+      verificationEnv: "GATWICK_GOOGLE_SITE_VERIFICATION",
+      verificationConfigured: Boolean(gatwick),
+      verificationPreview: maskCode(gatwick),
       gaEnv: "NEXT_PUBLIC_GA_MEASUREMENT_ID",
       gaConfigured: Boolean(gaDefault),
       gaId: gaDefault,
-      searchConsoleUrl: `https://search.google.com/search-console?resource_id=${encodeURIComponent(gatwick)}`,
+      searchConsoleUrl: `https://search.google.com/search-console?resource_id=${encodeURIComponent(gatwickUrl)}`,
     },
     {
       id: "homekent",

@@ -8,6 +8,24 @@ export function getSiteConfigFromHost(host: string | null): RideConnectSiteConfi
   return getRideConnectSite(rideConnectSiteIdFromHost(host));
 }
 
+function shareImageForSite(site: RideConnectSiteConfig) {
+  if (site.id === "dovertogatwick") {
+    // Use network taxi imagery — never borrow Kent Travel Hub assets.
+    return {
+      url: "/images/airport.jpg",
+      width: 1600,
+      height: 900,
+      alt: "Dover to Gatwick taxi — airport transfer from East Kent",
+    };
+  }
+  return {
+    url: "/rideconnect-logo.png",
+    width: 1024,
+    height: 682,
+    alt: site.brandTitle,
+  };
+}
+
 export function rideConnectMetadata(
   site: RideConnectSiteConfig,
   host: string | null,
@@ -16,20 +34,7 @@ export function rideConnectMetadata(
   const base = site.siteUrl.replace(/\/$/, "");
   const url = path === "/" ? base : `${base}${path}`;
   const verification = googleSiteVerificationForHost(host);
-  const shareImage =
-    site.id === "dovertogatwick"
-      ? {
-          url: "/kenttravelhub/hero-dover.jpg",
-          width: 1600,
-          height: 900,
-          alt: "Dover to Gatwick taxi — White Cliffs and cruise port pickups",
-        }
-      : {
-          url: "/rideconnect-logo.png",
-          width: 1024,
-          height: 682,
-          alt: site.brandTitle,
-        };
+  const shareImage = shareImageForSite(site);
 
   return {
     title: site.seoTitle,

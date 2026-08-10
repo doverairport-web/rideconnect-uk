@@ -21,6 +21,12 @@ export type RideConnectSiteConfig = {
   seoKeywords: string[];
   schemaName: string;
   schemaAlternateNames: string[];
+  /** Brand-specific sameAs profiles — do not share across unrelated domains. */
+  schemaSameAs: string[];
+  /** Cities / areas this brand claims in LocalBusiness schema. */
+  schemaAreaServed: string[];
+  /** Optional brand display phone override (defaults to primary network phone). */
+  schemaTelephone?: string;
 };
 
 const RIDE_CONNECT_URL =
@@ -62,12 +68,14 @@ export const RIDECONNECT_SITES: Record<RideConnectSiteId, RideConnectSiteConfig>
       "school transport Kent",
     ],
     schemaName: BRAND_LEGAL,
-    schemaAlternateNames: ["RideConnect", "Ride Connect UK", "Dover Taxi"],
+    schemaAlternateNames: ["RideConnect", "Ride Connect UK"],
+    schemaSameAs: ["https://rideconnectuk.com"],
+    schemaAreaServed: ["Dover", "Deal", "Folkestone", "Canterbury", "Kent"],
   },
   dovertaxi: {
     id: "dovertaxi",
     siteUrl: DOVER_TAXI_URL,
-    brandTitle: BRAND_LEGAL,
+    brandTitle: "Dover Taxi",
     localSubtitle: "Dover Taxi — Book Online",
     heroTitle: "Dover taxi you can book online — local, port and airport.",
     heroSubtitle:
@@ -89,13 +97,19 @@ export const RIDECONNECT_SITES: Record<RideConnectSiteId, RideConnectSiteConfig>
       "Heathrow taxi Dover",
       BRAND_LEGAL,
     ],
-    schemaName: `${BRAND_LEGAL} — Dover Taxi`,
-    schemaAlternateNames: ["Dover Taxi", "Dover Taxis", "J.U. Orion Transport", BRAND_LEGAL],
+    schemaName: "Dover Taxi",
+    schemaAlternateNames: ["Dover Taxis", "RideConnect UK — Dover Taxi", "J.U. Orion Transport"],
+    schemaSameAs: [
+      "https://dovertaxi.co.uk",
+      "https://www.yell.com/biz/j-u-orion-transport-dover-taxi-and-airport-transfers-dover-10774442/",
+      "https://www.google.com/maps/place/J.U.+Orion+Transport+%E2%80%93+Dover+Taxi+%26+Airport+Transfers/@51.1888713,1.2247614,17z",
+    ],
+    schemaAreaServed: ["Dover", "Deal", "Folkestone", "Canterbury", "Ashford", "Kent"],
   },
   oriontaxis: {
     id: "oriontaxis",
     siteUrl: ORION_URL,
-    brandTitle: BRAND_LEGAL,
+    brandTitle: "Orion Taxis",
     localSubtitle: "Dover & Kent Taxi Services",
     heroTitle: "Dover & Kent taxi services with RideConnect UK.",
     heroSubtitle:
@@ -113,13 +127,18 @@ export const RIDECONNECT_SITES: Record<RideConnectSiteId, RideConnectSiteConfig>
       "Dover airport transfer",
       BRAND_LEGAL,
     ],
-    schemaName: `${BRAND_LEGAL} — Dover & Kent`,
-    schemaAlternateNames: [BRAND_LEGAL, "J.U. Orion Transport"],
+    schemaName: "Orion Taxis",
+    schemaAlternateNames: ["Orion Taxi Dover", "J.U. Orion Transport", BRAND_LEGAL],
+    schemaSameAs: [
+      "https://oriontaxis.co.uk",
+      "https://www.yell.com/biz/j-u-orion-transport-dover-taxi-and-airport-transfers-dover-10774442/",
+    ],
+    schemaAreaServed: ["Dover", "Deal", "Folkestone", "Kent"],
   },
   dovertogatwick: {
     id: "dovertogatwick",
     siteUrl: GATWICK_URL,
-    brandTitle: BRAND_LEGAL,
+    brandTitle: "Dover to Gatwick Taxi",
     localSubtitle: "East Kent Airport Transfers",
     heroTitle: "Dover to Gatwick Taxi — Fixed Fares from £150",
     heroSubtitle:
@@ -142,12 +161,21 @@ export const RIDECONNECT_SITES: Record<RideConnectSiteId, RideConnectSiteConfig>
       "East Kent airport transfer",
       BRAND_LEGAL,
     ],
-    schemaName: `${BRAND_LEGAL} — Dover to Gatwick Taxi`,
+    schemaName: "Dover to Gatwick Taxi",
     schemaAlternateNames: [
-      BRAND_LEGAL,
-      "Dover to Gatwick Taxi",
       "Dover Gatwick Airport Transfer",
-      "Dover Taxi",
+      "East Kent Airport Transfers",
+      BRAND_LEGAL,
+    ],
+    schemaSameAs: ["https://dovertogatwicktaxi.com"],
+    schemaAreaServed: [
+      "Dover",
+      "Deal",
+      "Sandwich",
+      "Folkestone",
+      "Canterbury",
+      "Gatwick",
+      "Kent",
     ],
   },
 };
