@@ -295,10 +295,24 @@ export const KTH_ARTICLES: KthArticle[] = [
   ...KTH_SEO_ARTICLES,
 ] as KthArticle[];
 
+/** Slugs that permanently redirect to a stronger URL — keep for related links, exclude from sitemap. */
+export const KTH_REDIRECTED_ARTICLE_SLUGS = new Set<string>([
+  "dover-cruise-terminal-guide", // → /cruise-terminal
+]);
+
 export function getKthArticle(slug: string): KthArticle | undefined {
   return KTH_ARTICLES.find((article) => article.slug === slug);
 }
 
 export function getAllKthArticles(): KthArticle[] {
   return KTH_ARTICLES;
+}
+
+/** Articles that should appear in sitemap / be treated as indexable destinations. */
+export function getIndexableKthArticles(): KthArticle[] {
+  return KTH_ARTICLES.filter((article) => !KTH_REDIRECTED_ARTICLE_SLUGS.has(article.slug));
+}
+
+export function isKthArticleRedirected(slug: string): boolean {
+  return KTH_REDIRECTED_ARTICLE_SLUGS.has(slug);
 }

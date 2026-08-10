@@ -1,18 +1,31 @@
-import { BRAND_LEGAL } from "@/lib/brand";
 import type { RideConnectSiteConfig } from "@/lib/rideconnect/sites";
 import { email, phones, primaryPhone, telHref } from "@/lib/contact";
-import { YELL_LISTING_URL } from "@/lib/directories";
 
-const GOOGLE_MAPS_URL =
-  "https://www.google.com/maps/place/J.U.+Orion+Transport+%E2%80%93+Dover+Taxi+%26+Airport+Transfers/@51.1888713,1.2247614,17z";
+const DEFAULT_SAME_AS = [
+  "https://www.yell.com/biz/j-u-orion-transport-dover-taxi-and-airport-transfers-dover-10774442/",
+  "https://www.google.com/maps/place/J.U.+Orion+Transport+%E2%80%93+Dover+Taxi+%26+Airport+Transfers/@51.1888713,1.2247614,17z",
+];
 
+/**
+ * LocalBusiness + TaxiService JSON-LD for RideConnect network taxi brands.
+ * Identity is per-site — do not force RideConnect UK / Dover Taxi onto every domain.
+ */
 export function localBusinessJsonLd(site?: RideConnectSiteConfig) {
   const baseUrl = site?.siteUrl.replace(/\/$/, "") ?? "https://dovertaxi.co.uk";
-  const name = site?.schemaName ?? `${BRAND_LEGAL} — Dover Taxi`;
+  const name = site?.schemaName ?? "Dover Taxi";
   const description =
     site?.seoDescription ??
     "Book a Dover taxi online — local trips, hospital, station, cruise port and airport transfers.";
   const alternateName = site?.schemaAlternateNames ?? ["RideConnect UK", "J.U. Orion Transport"];
+  const areaNames = site?.schemaAreaServed?.length
+    ? site.schemaAreaServed
+    : ["Dover", "Kent"];
+  const sameAs = Array.from(
+    new Set([...(site?.schemaSameAs ?? []), ...(!site ? DEFAULT_SAME_AS : [])].filter(Boolean)),
+  );
+  const telephone = site?.schemaTelephone
+    ? telHref(site.schemaTelephone)
+    : telHref(primaryPhone);
 
   return {
     "@context": "https://schema.org",
@@ -22,7 +35,7 @@ export function localBusinessJsonLd(site?: RideConnectSiteConfig) {
     alternateName,
     description,
     url: baseUrl,
-    telephone: telHref(primaryPhone),
+    telephone,
     email,
     image: `${baseUrl}/rideconnect-logo.png`,
     logo: `${baseUrl}/rideconnect-logo.png`,
@@ -38,10 +51,11 @@ export function localBusinessJsonLd(site?: RideConnectSiteConfig) {
       latitude: 51.1888713,
       longitude: 1.2247614,
     },
-    areaServed: [
-      { "@type": "City", name: "Dover" },
-      { "@type": "AdministrativeArea", name: "Kent" },
-    ],
+    areaServed: areaNames.map((city) =>
+      city === "Kent"
+        ? { "@type": "AdministrativeArea", name: city }
+        : { "@type": "City", name: city },
+    ),
     openingHoursSpecification: {
       "@type": "OpeningHoursSpecification",
       dayOfWeek: [
@@ -62,7 +76,7 @@ export function localBusinessJsonLd(site?: RideConnectSiteConfig) {
       contactType: "bookings",
       areaServed: "GB",
     })),
-    sameAs: [GOOGLE_MAPS_URL, YELL_LISTING_URL, "https://rideconnectuk.com"],
+    sameAs,
     priceRange: "££",
   };
 }

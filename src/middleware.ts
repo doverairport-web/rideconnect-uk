@@ -148,6 +148,23 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url, 308);
   }
 
+  // /book meaning per host (verified from code + live HTML):
+  // - KTH: intentional RideConnect taxi booking entry (kthBookUrl). Fix cross-brand
+  //   Dover Taxi canonical via 308 → primary RideConnect book URL (NOT Dover Taxi).
+  // - HomeKent: nav/CTAs use #quote + /contact + /api/homekent/quote. Live /book
+  //   incorrectly serves the taxi BookingForm — do NOT send users to Dover Taxi.
+  //   Send to HomeKent contact/quote instead.
+  if (pathname === "/book" || pathname.startsWith("/book/")) {
+    if (isKentTravelHubHost(host)) {
+      const target = new URL(pathname + request.nextUrl.search, siteUrlForId("rideconnect"));
+      return NextResponse.redirect(target, 308);
+    }
+    if (isHomeKentHost(host)) {
+      const target = new URL("/contact", "https://homekent.co.uk");
+      return NextResponse.redirect(target, 308);
+    }
+  }
+
   // Consolidate Gatwick money keywords onto dovertogatwicktaxi.com (fix duplicate canonicals).
   const transferMatch = pathname.match(/^\/transfers\/([^/]+)\/?$/);
   if (
