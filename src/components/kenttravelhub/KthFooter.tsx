@@ -1,4 +1,9 @@
-import { KTH_NAME, KTH_POWERED_BY, KTH_SITE_URL } from "@/lib/kenttravelhub/brand";
+import {
+  KTH_APP_URL,
+  KTH_NAME,
+  KTH_POWERED_BY,
+  KTH_SITE_URL,
+} from "@/lib/kenttravelhub/brand";
 import { KTH_SITE_SECTIONS } from "@/lib/kenttravelhub/sections";
 import { KthCookieSettingsLink } from "@/components/kenttravelhub/KthCookieConsent";
 import { KthEmailCapture } from "@/components/kenttravelhub/KthEmailCapture";
@@ -57,6 +62,11 @@ export async function KthFooter() {
                 <Link href={home} className="hover:text-white">
                   Live windows
                 </Link>
+              </li>
+              <li>
+                <a href={KTH_APP_URL} className="hover:text-white">
+                  Dover app
+                </a>
               </li>
               {sectionLinks.map((link) => (
                 <li key={link.href}>
