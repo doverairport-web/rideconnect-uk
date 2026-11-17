@@ -1,3 +1,4 @@
+import { KTH_APP_URL } from "@/lib/kenttravelhub/brand";
 import { kthBookUrl, kthPath } from "@/lib/kenttravelhub/paths";
 import { primaryPhone, telHref, whatsappHref } from "@/lib/contact";
 import Link from "next/link";
@@ -40,6 +41,12 @@ export async function KthHomeCtaBar() {
       >
         Check Live Board
       </Link>
+      <a
+        href={KTH_APP_URL}
+        className="inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-kth-gold/50 bg-kth-gold/15 px-4 py-2.5 text-sm font-bold text-kth-gold transition hover:bg-kth-gold/25 sm:w-auto"
+      >
+        Open Dover app
+      </a>
     </div>
   );
 }

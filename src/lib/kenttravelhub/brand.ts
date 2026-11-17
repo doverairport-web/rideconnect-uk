@@ -25,6 +25,13 @@ export const KTH_EXPLORE_IMAGES = {
 export const KTH_SITE_URL =
   process.env.NEXT_PUBLIC_KTH_URL?.trim() || "https://kenttravelhub.co.uk";
 
+/** Live Dover glance app (ships, roads, shore plans). Not an App Store listing. */
+export const KTH_APP_URL = "https://app.kenttravelhub.co.uk/";
+
+/** One-liner shown near the homepage Dover app CTA. */
+export const KTH_APP_HINT =
+  "Live ships, roads and shore plans — add to iPhone Home Screen from Safari.";
+
 export const KTH_POWERED_BY = BRAND_LEGAL;
 
 export const KTH_SEO_LINE =

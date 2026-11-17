@@ -1,4 +1,5 @@
 import {
+  KTH_APP_HINT,
   KTH_HERO_EYEBROW,
   KTH_HERO_HEADLINE,
   KTH_HERO_SUBHEADLINE,
@@ -30,6 +31,7 @@ export function KthHomeHero() {
 
         <div className="mt-5 max-w-2xl">
           <KthHomeCtaBar />
+          <p className="mt-3 text-xs leading-relaxed text-white/60">{KTH_APP_HINT}</p>
         </div>
 
         <div className="mt-4 max-w-2xl rounded-lg border border-[#25D366]/30 bg-[#25D366]/10 p-4 sm:flex sm:items-center sm:justify-between sm:gap-4">

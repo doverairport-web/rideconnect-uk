@@ -1,6 +1,7 @@
 import { KthLogo } from "@/components/kenttravelhub/KthLogo";
 import { KthMobileNav } from "@/components/kenttravelhub/KthMobileNav";
 import { KthWhatsAppChannelFollow } from "@/components/kenttravelhub/KthWhatsAppChannelFollow";
+import { KTH_APP_URL } from "@/lib/kenttravelhub/brand";
 import { kthBookUrl, kthPath } from "@/lib/kenttravelhub/paths";
 import { primaryPhone, telHref } from "@/lib/contact";
 import Link from "next/link";
@@ -20,6 +21,7 @@ export async function KthHeader() {
     { href: await kthPath("/trains"), label: "Trains" },
     { href: await kthPath("/buses"), label: "Buses" },
     { href: await kthPath("/live"), label: "Live Travel" },
+    { href: KTH_APP_URL, label: "Dover App", external: true },
     { href: await kthPath("/visit"), label: "Visit Kent" },
     { href: await kthPath("/stay"), label: "Stay" },
     { href: await kthPath("/stay#restaurants"), label: "Eat & Drink" },
@@ -33,18 +35,28 @@ export async function KthHeader() {
         <KthLogo homeHref={home} />
 
         <div className="ml-auto flex items-center gap-2 sm:gap-3 xl:ml-0 xl:flex-1 xl:justify-center">
-          <KthMobileNav links={navLinks} bookHref={book} />
+          <KthMobileNav links={navLinks} bookHref={book} appHref={KTH_APP_URL} />
 
         <nav className="hidden flex-1 items-center justify-center gap-2 text-[10px] font-semibold uppercase tracking-wide text-kth-navy/80 xl:flex xl:gap-3 xl:text-[11px]">
-          {navLinks.map((link) => (
-            <Link
-              key={link.label}
-              href={link.href}
-              className="whitespace-nowrap transition hover:text-kth-sea"
-            >
-              {link.label}
-            </Link>
-          ))}
+          {navLinks.map((link) =>
+            link.external ? (
+              <a
+                key={link.label}
+                href={link.href}
+                className="whitespace-nowrap transition hover:text-kth-sea"
+              >
+                {link.label}
+              </a>
+            ) : (
+              <Link
+                key={link.label}
+                href={link.href}
+                className="whitespace-nowrap transition hover:text-kth-sea"
+              >
+                {link.label}
+              </Link>
+            ),
+          )}
         </nav>
         </div>
 

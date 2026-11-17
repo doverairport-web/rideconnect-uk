@@ -7,14 +7,16 @@ import { useEffect, useState } from "react";
 export type KthNavLink = {
   href: string;
   label: string;
+  external?: boolean;
 };
 
 type Props = {
   links: KthNavLink[];
   bookHref: string;
+  appHref?: string;
 };
 
-export function KthMobileNav({ links, bookHref }: Props) {
+export function KthMobileNav({ links, bookHref, appHref }: Props) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -73,17 +75,36 @@ export function KthMobileNav({ links, bookHref }: Props) {
             <ul className="divide-y divide-kth-navy/8 px-4 py-2">
               {links.map((link) => (
                 <li key={link.label}>
-                  <Link
-                    href={link.href}
-                    onClick={() => setOpen(false)}
-                    className="block py-3 text-sm font-semibold uppercase tracking-wide text-kth-navy hover:text-kth-sea"
-                  >
-                    {link.label}
-                  </Link>
+                  {link.external ? (
+                    <a
+                      href={link.href}
+                      onClick={() => setOpen(false)}
+                      className="block py-3 text-sm font-semibold uppercase tracking-wide text-kth-navy hover:text-kth-sea"
+                    >
+                      {link.label}
+                    </a>
+                  ) : (
+                    <Link
+                      href={link.href}
+                      onClick={() => setOpen(false)}
+                      className="block py-3 text-sm font-semibold uppercase tracking-wide text-kth-navy hover:text-kth-sea"
+                    >
+                      {link.label}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>
             <div className="border-t border-kth-navy/8 px-4 py-4 space-y-3">
+              {appHref ? (
+                <a
+                  href={appHref}
+                  onClick={() => setOpen(false)}
+                  className="block rounded-md border-2 border-kth-gold bg-white py-3 text-center text-sm font-extrabold uppercase tracking-wide text-kth-navy transition hover:bg-kth-gold"
+                >
+                  Open Dover app
+                </a>
+              ) : null}
               <Link
                 href={bookHref}
                 onClick={() => setOpen(false)}
